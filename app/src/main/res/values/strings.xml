@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Marvel in English</string>
+    <string name="arena_subtitle">The Ultimate Arena</string>
+    <string name="desert_force_motto">The Desert Force Path of Mastery</string>
+    <string name="nav_arena">Arena</string>
+    <string name="nav_vault">Vault</string>
+    <string name="nav_ranks">Ranks</string>
+    <string name="grade_6_title">Grade 6</string>
+    <string name="grade_6_subtitle">Foundational Collocations &amp; Mechanics</string>
+    <string name="grade_11_title">Grade 11</string>
+    <string name="grade_11_subtitle">Advanced Idioms, Prepositions &amp; Causatives</string>
+    <string name="start_mission">Launch Mission</string>
+    <string name="pro_tip_label">حركة فنان</string>
+    <string name="whatsapp_tutor_cta">Ask Tutor on WhatsApp</string>
+    <string name="share_score_cta">Share Score on WhatsApp</string>
+</resources>

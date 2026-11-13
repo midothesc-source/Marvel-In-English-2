@@ -1,0 +1,6 @@
+{
+  "name": "Marvel in English",
+  "description": "Gamified B1/B1+ English learning arena for Grade 6 and Grade 11 Egyptian students with collocations, prepositions, phrasal verbs, and Egyptian Arabic explanations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

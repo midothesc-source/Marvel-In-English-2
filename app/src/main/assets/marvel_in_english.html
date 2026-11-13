@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Marvel in English: The Ultimate Arena</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070B16;
+      --surface: #0E1528;
+      --elevated: #151F38;
+      --border: #263456;
+      --primary: #00E5FF;
+      --on-primary: #070B16;
+      --secondary: #FFB300;
+      --on-secondary: #070B16;
+      --tertiary: #00E676;
+      --text: #F1F5F9;
+      --muted: #94A3B8;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+    h1, h2, h3, .font-display { font-family: 'Outfit', sans-serif; }
+    .font-arabic { font-family: 'Cairo', sans-serif; direction: rtl; text-align: right; }
+    .theme-surface { background-color: var(--surface); border-color: var(--border); }
+    .theme-elevated { background-color: var(--elevated); border-color: var(--border); }
+    .theme-primary-btn { background-color: var(--primary); color: var(--on-primary); }
+    .theme-secondary-badge { background-color: color-mix(in srgb, var(--secondary) 18%, transparent); color: var(--secondary); border-color: color-mix(in srgb, var(--secondary) 55%, transparent); }
+    .theme-primary-text { color: var(--primary); }
+    .theme-secondary-text { color: var(--secondary); }
+    .theme-tertiary-text { color: var(--tertiary); }
+    @keyframes popIn { 0% { opacity: 0; transform: translateY(8px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+    .animate-pop { animation: popIn 0.25s ease-out forwards; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-24">
+  <div id="app" class="w-full max-w-xl px-4 pt-4 space-y-4"></div>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 inset-x-0 z-30 border-t theme-surface backdrop-blur-md">
+    <div class="max-w-xl mx-auto grid grid-cols-3 h-16">
+      <button onclick="setTab('arena')" id="nav-arena" class="flex flex-col items-center justify-center text-xs font-semibold gap-1">
+        <span>⚡</span><span>Arena</span>
+      </button>
+      <button onclick="setTab('vault')" id="nav-vault" class="flex flex-col items-center justify-center text-xs font-semibold gap-1 relative">
+        <span>📦</span><span>Vault <span id="vault-badge" class="hidden ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"></span></span>
+      </button>
+      <button onclick="setTab('ranks')" id="nav-ranks" class="flex flex-col items-center justify-center text-xs font-semibold gap-1">
+        <span>🏆</span><span>Ranks</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Theme Picker Modal -->
+  <div id="theme-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3">
+    <div class="w-full max-w-lg rounded-3xl border theme-surface p-5 max-h-[82vh] flex flex-col gap-3 animate-pop">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-bold">Arena Theme Studio (10 Themes)</h3>
+          <p class="text-xs opacity-75">Saved automatically to your device</p>
+        </div>
+        <button onclick="toggleThemeModal(false)" class="px-3 py-1.5 rounded-xl border theme-elevated text-xs font-bold">Close</button>
+      </div>
+      <div id="theme-grid" class="grid grid-cols-2 gap-2.5 overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+
+  <!-- VIP Unlock Modal -->
+  <div id="vip-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-3xl border theme-surface p-5 space-y-3 animate-pop">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-xl border theme-secondary-badge">👑</div>
+        <div>
+          <h3 class="text-lg font-bold">Unlock VIP Mastery</h3>
+          <p class="text-xs opacity-75">Level 3: Advanced &amp; Cinematic Mastery</p>
+        </div>
+      </div>
+      <p class="text-sm opacity-85">Enter your VIP Activation Code to unlock Level 3 C1–C2 idioms and cinematic slang.</p>
+      <p class="font-arabic text-sm theme-secondary-text">اكتب كود التفعيل عشان تفتح المستوى التالت ولغة السينما والاحتراف.</p>
+      <input id="vip-input" type="text" placeholder="e.g. MARVEL-VIP" class="w-full px-4 py-3 rounded-xl border theme-elevated text-sm font-semibold uppercase tracking-wider outline-none" />
+      <p id="vip-error" class="text-xs text-red-400 hidden"></p>
+      <p class="text-[11px] opacity-70">Demo codes: <span class="font-bold">MARVEL-VIP</span> • <span class="font-bold">DESERT-FORCE</span> • <span class="font-bold">CINEMA-2026</span></p>
+      <div class="flex gap-2 pt-1">
+        <button onclick="toggleVipModal(false)" class="flex-1 py-3 rounded-xl border theme-elevated text-sm font-bold">Cancel</button>
+        <button onclick="activateVipCode()" class="flex-1 py-3 rounded-xl theme-primary-btn text-sm font-bold">Activate VIP</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const THEMES = [
+      { id: 'desert_force', name: 'Desert Force', ar: 'قوة الصحراء', bg: '#070B16', surface: '#0E1528', elevated: '#151F38', border: '#263456', primary: '#00E5FF', onPrimary: '#070B16', secondary: '#FFB300', onSecondary: '#070B16', tertiary: '#00E676', text: '#F1F5F9', muted: '#94A3B8' },
+      { id: 'nile_oasis', name: 'Nile Oasis', ar: 'واحة النيل', bg: '#041418', surface: '#0A2128', elevated: '#11303A', border: '#1E4B59', primary: '#14F1D9', onPrimary: '#041418', secondary: '#FFD54F', onSecondary: '#041418', tertiary: '#4ADE80', text: '#ECFEFF', muted: '#99C2CC' },
+      { id: 'cairo_sunset', name: 'Cairo Sunset', ar: 'غروب القاهرة', bg: '#14071B', surface: '#210E2C', elevated: '#2F163E', border: '#4B2563', primary: '#FF7A3D', onPrimary: '#14071B', secondary: '#FF4D94', onSecondary: '#14071B', tertiary: '#FFD166', text: '#FDF4FF', muted: '#CBB2DB' },
+      { id: 'cyber_pharaoh', name: 'Cyber Pharaoh', ar: 'فرعون المستقبل', bg: '#090518', surface: '#140C2E', elevated: '#1F1445', border: '#392773', primary: '#C084FC', onPrimary: '#090518', secondary: '#FACC15', onSecondary: '#090518', tertiary: '#38BDF8', text: '#F5F3FF', muted: '#B8AEE0' },
+      { id: 'siwa_emerald', name: 'Siwa Emerald', ar: 'زمردة سيوة', bg: '#04120C', surface: '#0A2117', elevated: '#113123', border: '#1E523B', primary: '#10F5A4', onPrimary: '#04120C', secondary: '#FB923C', onSecondary: '#04120C', tertiary: '#A3E635', text: '#ECFDF5', muted: '#9ACBB5' },
+      { id: 'red_sea_coral', name: 'Red Sea Coral', ar: 'شعاب البحر الأحمر', bg: '#061024', surface: '#0D1D3B', elevated: '#152B52', border: '#24437A', primary: '#FF5E7E', onPrimary: '#061024', secondary: '#22D3EE', onSecondary: '#061024', tertiary: '#FDE047', text: '#F0F7FF', muted: '#A5BBE0' },
+      { id: 'alexandria_breeze', name: 'Alexandria Breeze', ar: 'نسيم إسكندرية', bg: '#F0F8FC', surface: '#FFFFFF', elevated: '#E3F2FA', border: '#BDDDF0', primary: '#0066E6', onPrimary: '#FFFFFF', secondary: '#E65100', onSecondary: '#FFFFFF', tertiary: '#00996D', text: '#0B1F3A', muted: '#3E5A7D' },
+      { id: 'luxor_daylight', name: 'Luxor Sandstone', ar: 'شمس الأقصر', bg: '#FDF7EC', surface: '#FFFFFDF8', elevated: '#F5EAD6', border: '#E2CCA8', primary: '#1D4ED8', onPrimary: '#FFFFFF', secondary: '#C2410C', onSecondary: '#FFFFFF', tertiary: '#0F766E', text: '#23180D', muted: '#5C4730' },
+      { id: 'giza_twilight', name: 'Giza Twilight', ar: 'شفق الجيزة', bg: '#0B0D21', surface: '#141838', elevated: '#1E2452', border: '#333D7A', primary: '#F59E0B', onPrimary: '#0B0D21', secondary: '#818CF8', onSecondary: '#0B0D21', tertiary: '#2DD4BF', text: '#F3F4FF', muted: '#A7B0DC' },
+      { id: 'mint_frost', name: 'Mint Frost', ar: 'ندى النعناع', bg: '#ECFDF5', surface: '#FFFFFF', elevated: '#D9F7E9', border: '#A7E8CA', primary: '#059669', onPrimary: '#FFFFFF', secondary: '#DB2777', onSecondary: '#FFFFFF', tertiary: '#4F46E5', text: '#062C22', muted: '#2B6150' }
+    ];
+
+    const LEVELS = [
+      { id: 'L1', short: 'Level 1', title: 'Beginner & Essential Idioms', cefr: 'A2–B1', desc: 'Foundational phrasal verbs & everyday expressions', vip: false },
+      { id: 'L2', short: 'Level 2', title: 'Intermediate & Colloquial Power', cefr: 'B1–B2', desc: 'Idioms, proverbs & conversational collocations', vip: false },
+      { id: 'L3', short: 'Level 3', title: 'Advanced & Cinematic Mastery', cefr: 'C1–C2', desc: 'High-level idioms, cinematic slang & advanced expressions', vip: true }
+    ];
+
+    const RANKS = [
+      { id: 'scout', title: 'Desert Scout', ar: 'كشّاف الصحراء', minXp: 0, motto: 'أول خطوة في الصحرا بتفرق بين المتفرج والبطل.' },
+      { id: 'pathfinder', title: 'Sand Pathfinder', ar: 'دليل الرمال', minXp: 150, motto: 'عينك بدأت تلقط التعبيرات والتريكات قبل ما تقع فيها.' },
+      { id: 'vanguard', title: 'Oasis Vanguard', ar: 'طليعة الواحة', minXp: 350, motto: 'ثابت في الكلام، وكلمتك دايماً في الجون.' },
+      { id: 'tactician', title: 'Mirage Tactician', ar: 'مخطط السراب', minXp: 650, motto: 'الأمثال والمتلازمات اللفظية بقت بتطلع منك بسلاسة.' },
+      { id: 'commander', title: 'Falcon Commander', ar: 'قائد الصقور', minXp: 1000, motto: 'تركيزك عالي وإنجليزيتك بتتكلم زي نجوم السينما.' },
+      { id: 'master', title: 'Desert Force Master', ar: 'سيد قوة الصحراء', minXp: 1500, motto: 'أسطورة الساحة.. قفلت اللعبة يا بطل!' }
+    ];
+
+    const QUESTIONS = [
+      { id: 'l1_1', level: 'L1', cat: 'Idioms & Expressions', tag: 'piece of cake', prompt: "Don't stress about today's quiz—after studying all week, it will be a _____!", options: ['piece of cake', 'cup of tea', 'slice of bread', 'drop of water'], ans: 0, xp: 25, ar: "التعبير الإنجليزي الشهير a piece of cake معناه حرفياً 'حتة كيكة'، والمقصود بيه حاجة سهلة جداً زي شرب الميه.", tip: "حركة فنان: في العربي بنقول 'سهل مية' وفي الإنجليزي بيقولوا 'حتة تورتة' = a piece of cake!" },
+      { id: 'l1_2', level: 'L1', cat: 'Phrasal Verbs', tag: 'look after', prompt: 'Could you _____ my backpack for a minute while I grab a coffee?', options: ['look up', 'look after', 'look into', 'look out'], ans: 1, xp: 25, ar: "الفعل look بيتغير معناه حسب حرف الجر: look after يعني 'يخلي باله من' أو 'يعتني بـ'، بينما look up يعني يدور على معلومة.", tip: "حركة فنان: تخيل إنك بتمشي ورا (after) الحاجة عشان تحرسها = look after!" },
+      { id: 'l1_3', level: 'L1', cat: 'Collocations', tag: 'make vs. do', prompt: "Every beginner _____ a few mistakes at first—that's how fluency grows!", options: ['does', 'makes', 'takes', 'puts'], ans: 1, xp: 25, ar: "الغلطة في الإنجليزي مش بتتعمل بـ do، إحنا بنصنعها بـ make! فدايماً بنقول make a mistake.", tip: "حركة فنان: النتيجة الجديدة (mistake, decision) تاخد make. الشغل والروتين (homework, favor) ياخدوا do!" },
+      { id: 'l1_4', level: 'L1', cat: 'Idioms & Expressions', tag: 'under the weather', prompt: 'Salma skipped training tonight because she is feeling a bit _____.', options: ['over the moon', 'under the weather', 'in hot water', 'on cloud nine'], ans: 1, xp: 25, ar: "تعبير under the weather معناه 'تعبان شوية أو حاسس بإرهاق وبرد خفيف'.", tip: "حركة فنان: مضغوط تحت الغيوم = صحتك مش تمام: under the weather!" },
+      { id: 'l1_5', level: 'L1', cat: 'Phrasal Verbs', tag: 'give up', prompt: 'Learning pronunciation takes patience, so never _____ on yourself.', options: ['give away', 'give up', 'give back', 'give in'], ans: 1, xp: 25, ar: "الفعل give up معناه 'يستسلم' أو 'يبطل محاولة'.", tip: "حركة فنان: بترفع إيديك لفوق (UP) لما تستسلم، بس أبطال Desert Force عمرهم ما يعملوا give UP!" },
+      { id: 'l1_6', level: 'L1', cat: 'Idioms & Expressions', tag: 'break a leg', prompt: 'Before Nadia walked onto the stage, her friends smiled and shouted, "_____!"', options: ['Break a leg', 'Hit the sack', 'Pull my leg', 'Miss the boat'], ans: 0, xp: 25, ar: "في المسرح والسينما لما تقول لحد Break a leg معناها 'بالتوفيق وتكسر الدنيا'!", tip: "حركة فنان: في مصر بنقول 'هتكسر الدنيا' قبل العرض، وفي الإنجليزي بيقولوا Break a leg!" },
+
+      { id: 'l2_1', level: 'L2', cat: 'Idioms & Expressions', tag: 'hit the nail on the head', prompt: 'When you said the real problem is timing, not budget, you _____.', options: ['missed the point', 'hit the nail on the head', 'beat around the bush', 'sat on the fence'], ans: 1, xp: 35, ar: "معناه 'جبت التايهة' أو 'وصفت المشكلة بالظبط في الصميم'—زي النجار اللي بيخبط على راس المسمار!", tip: "حركة فنان: خبطت على المسمار في راسه = جبت الكلام في الجون!" },
+      { id: 'l2_2', level: 'L2', cat: 'Collocations & Proverbs', tag: 'Actions vs. Words', prompt: 'Stop promising to practice every day and just start—remember, _____.', options: ['actions speak louder than words', 'curiosity killed the cat', 'every cloud has a silver lining', "two wrongs don't make a right"], ans: 0, xp: 35, ar: "المثل الشهير Actions speak louder than words معناه 'الأفعال أبلغ من الأقوال'.", tip: "حركة فنان: بدل 'اسمع كلامك أصدقك' بنقول: Actions speak louder than words!" },
+      { id: 'l2_3', level: 'L2', cat: 'Collocations & Proverbs', tag: 'make up your mind', prompt: 'The train leaves in ten minutes! You need to _____ and pick a seat.', options: ['make up your mind', 'do up your mind', 'take up your mind', 'keep up your mind'], ans: 0, xp: 35, ar: "التعبير make up your mind معناه 'تاخد قرار نهائي وتحسم أمرك' بدل التردد.", tip: "حركة فنان: تصنع قرارك = MAKE up your mind (عمرها ما بتيجي مع do!)." },
+      { id: 'l2_4', level: 'L2', cat: 'Idioms & Expressions', tag: 'spill the beans', prompt: "We are planning a surprise party for Karim, so whatever you do, don't _____!", options: ['break the ice', 'spill the beans', 'bite your tongue', 'burn bridges'], ans: 1, xp: 35, ar: "تعبير spill the beans معناه 'يفضح السر بالغلط' ويبوظ المفاجأة!", tip: "حركة فنان: لو وقّعت الفول اتفضح الموضوع = أوعى تبق البحصة!" },
+      { id: 'l2_5', level: 'L2', cat: 'Phrasal Verbs', tag: 'come up with', prompt: 'Our startup team had to _____ a creative marketing plan overnight.', options: ['come across', 'come down with', 'come up with', 'come into'], ans: 2, xp: 35, ar: "الفعل come up with معناه 'يبتكر فكرة أو حل جديد'.", tip: "حركة فنان: اللمبة نورت فوق (UP) دماغك وطلعت بفكرة = come UP with an idea!" },
+      { id: 'l2_6', level: 'L2', cat: 'Collocations & Proverbs', tag: 'heavy rain / strong coffee', prompt: 'I need a cup of _____ coffee before driving through this _____ rain.', options: ['heavy / strong', 'strong / heavy', 'big / powerful', 'hard / thick'], ans: 1, xp: 35, ar: "القهوة بتاخد strong coffee، بينما المطر والزحمة بياخدوا heavy rain / heavy traffic!", tip: "حركة فنان: القهوة والرياح = STRONG. المطر والزحمة = HEAVY!" },
+
+      { id: 'l3_1', level: 'L3', cat: 'Cinematic Slang', tag: "steal someone's thunder", prompt: 'Right when Youssef announced his promotion, his cousin revealed her engagement and _____.', options: ['stole his thunder', 'threw in the towel', 'pulled some strings', 'kept a low profile'], ans: 0, xp: 45, ar: "تعبير سينمائي رائع! steal someone's thunder معناه 'يسرق الأضواء من حد' ويبوظ لحظة تألقه.", tip: "حركة فنان: بالمصري 'سحب البساط من تحت رجليه' = stole his thunder!" },
+      { id: 'l3_2', level: 'L3', cat: 'Cinematic Slang', tag: 'cut to the chase', prompt: 'We only have five minutes before the pitch starts, so please _____ and share the numbers.', options: ['cut corners', 'cut to the chase', 'cut it out', 'cut loose'], ans: 1, xp: 45, ar: "من أشهر تعبيرات هوليوود! cut to the chase معناه 'ادخل في الموضوع على طول من غير مقدمات'.", tip: "حركة فنان: المخرج قص المقدمات ودخل على المطاردة (chase) فوراً = هات من الآخر!" },
+      { id: 'l3_3', level: 'L3', cat: 'Idioms & Expressions', tag: 'elephant in the room', prompt: 'Everyone praised the visuals, yet nobody addressed the _____—the audio was broken.', options: ['elephant in the room', 'skeleton in the closet', "wolf in sheep's clothing", 'fly on the wall'], ans: 0, xp: 45, ar: "elephant in the room معناه 'مشكلة ضخمة وواضحة قدام الكل بس الناس بتتجاهلها'!", tip: "حركة فنان: فيل واقف في نص الأوضة والكل ساكت مش عايز يفتحه!" },
+      { id: 'l3_4', level: 'L3', cat: 'Cinematic Slang', tag: 'no-brainer', prompt: 'Getting a full scholarship with free mentorship? Accepting that offer is an absolute _____!', options: ['long shot', 'no-brainer', 'red herring', 'close call'], ans: 1, xp: 45, ar: "كلمة slang شيك في الأفلام والبيزنس: no-brainer معناها 'قرار سهل وبديهي مش محتاج تفكير'!", tip: "حركة فنان: من كتر ما القرار واضح مش محتاج تشغل دماغك = no-brainer!" },
+      { id: 'l3_5', level: 'L3', cat: 'Idioms & Expressions', tag: "play devil's advocate", prompt: 'I actually agree with your plan, but let me _____ to test if investors can poke holes in it.', options: ['play it by ear', "play devil's advocate", 'call it a night', 'go the extra mile'], ans: 1, xp: 50, ar: "لما تتعمد تاخد الرأي المعارض في نقاش عشان تختبر قوة الفكرة وتقفل أي ثغرات.", tip: "حركة فنان: بتعمل دور المعارض الذكي عشان تقوي حجتك قبل المناقشة الحقيقية!" },
+      { id: 'l3_6', level: 'L3', cat: 'Cinematic Slang', tag: 'bite the bullet', prompt: "I've delayed fixing this tricky bug all week—time to _____ and tackle it head-on.", options: ['bite the bullet', 'dodge a bullet', 'bite off more', 'take a rain check'], ans: 0, xp: 45, ar: "تعبير bite the bullet معناه 'تشد على نفسك وتواجه موقف صعب بشجاعة' بدل التأجيل.", tip: "حركة فنان: dodge a bullet = فلتّت من مصيبة. bite the bullet = واجهت الصعب بشجاعة!" }
+    ];
+
+    const VIP_CODES = new Set(['MARVEL-VIP', 'DESERT-FORCE', 'CINEMA-2026', 'HERO-C1']);
+    const STORAGE_KEY = 'marvel_arena_cefr_v1';
+
+    let state = loadState();
+    let ui = { tab: 'arena', selectedLevel: 'L1', session: null, summary: null };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return { xp: 0, high: { L1: 0, L2: 0, L3: 0 }, streak: 0, bestStreak: 0, theme: 'desert_force', vip: false, vault: [], ...JSON.parse(raw) };
+      } catch {}
+      return { xp: 0, high: { L1: 0, L2: 0, L3: 0 }, streak: 0, bestStreak: 0, theme: 'desert_force', vip: false, vault: [] };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function applyTheme(themeId) {
+      const t = THEMES.find(x => x.id === themeId) || THEMES[0];
+      const r = document.documentElement.style;
+      r.setProperty('--bg', t.bg);
+      r.setProperty('--surface', t.surface);
+      r.setProperty('--elevated', t.elevated);
+      r.setProperty('--border', t.border);
+      r.setProperty('--primary', t.primary);
+      r.setProperty('--on-primary', t.onPrimary);
+      r.setProperty('--secondary', t.secondary);
+      r.setProperty('--on-secondary', t.onSecondary);
+      r.setProperty('--tertiary', t.tertiary);
+      r.setProperty('--text', t.text);
+      r.setProperty('--muted', t.muted);
+      state.theme = t.id;
+      saveState();
+    }
+
+    function currentRank() {
+      return [...RANKS].reverse().find(r => state.xp >= r.minXp) || RANKS[0];
+    }
+
+    function setTab(tab) {
+      ui.tab = tab;
+      ui.session = null;
+      ui.summary = null;
+      render();
+    }
+
+    function selectLevel(levelId) {
+      const lvl = LEVELS.find(l => l.id === levelId);
+      if (lvl.vip && !state.vip) {
+        toggleVipModal(true);
+        return;
+      }
+      ui.selectedLevel = levelId;
+      render();
+    }
+
+    function startMission(levelId = ui.selectedLevel, vaultOnly = false) {
+      const pool = vaultOnly
+        ? QUESTIONS.filter(q => state.vault.includes(q.id))
+        : QUESTIONS.filter(q => q.level === levelId);
+      if (!pool.length) return;
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      ui.tab = 'arena';
+      ui.summary = null;
+      ui.session = {
+        levelId,
+        vaultOnly,
+        questions: shuffled,
+        idx: 0,
+        selected: null,
+        revealed: false,
+        score: 0,
+        liveStreak: state.streak,
+        maxStreak: 0,
+        records: []
+      };
+      render();
+    }
+
+    function answerOption(optIdx) {
+      const s = ui.session;
+      if (!s || s.revealed) return;
+      const q = s.questions[s.idx];
+      const ok = optIdx === q.ans;
+      s.selected = optIdx;
+      s.revealed = true;
+      s.liveStreak = ok ? s.liveStreak + 1 : 0;
+      s.maxStreak = Math.max(s.maxStreak, s.liveStreak);
+      const mult = s.liveStreak >= 6 ? 4 : s.liveStreak >= 4 ? 3 : s.liveStreak >= 2 ? 2 : 1;
+      const gained = ok ? q.xp * mult : 0;
+      s.score += gained;
+      s.records.push({ q, ok, gained });
+      if (!ok && !state.vault.includes(q.id)) state.vault.push(q.id);
+      if (ok) state.vault = state.vault.filter(id => id !== q.id);
+      render();
+    }
+
+    function nextQuestion() {
+      const s = ui.session;
+      if (!s || !s.revealed) return;
+      if (s.idx + 1 < s.questions.length) {
+        s.idx++;
+        s.selected = null;
+        s.revealed = false;
+        render();
+        return;
+      }
+      state.xp += s.score;
+      state.streak = s.liveStreak;
+      state.bestStreak = Math.max(state.bestStreak, s.maxStreak, state.streak);
+      if (!s.vaultOnly && s.score > (state.high[s.levelId] || 0)) {
+        state.high[s.levelId] = s.score;
+      }
+      saveState();
+      ui.summary = {
+        levelId: s.levelId,
+        score: s.score,
+        correct: s.records.filter(r => r.ok).length,
+        total: s.records.length,
+        maxStreak: s.maxStreak,
+        missed: s.records.filter(r => !r.ok).map(r => r.q)
+      };
+      ui.session = null;
+      render();
+    }
+
+    function toggleThemeModal(open) {
+      const modal = document.getElementById('theme-modal');
+      modal.classList.toggle('hidden', !open);
+      if (open) renderThemeGrid();
+    }
+
+    function renderThemeGrid() {
+      document.getElementById('theme-grid').innerHTML = THEMES.map(t => `
+        <button onclick="applyTheme('${t.id}'); renderThemeGrid(); render();"
+          class="p-3 rounded-2xl border text-left transition ${state.theme === t.id ? 'ring-2' : ''}"
+          style="background:${t.surface}; border-color:${state.theme === t.id ? t.primary : t.border}; color:${t.text};">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex gap-1.5">
+              <span class="w-3.5 h-3.5 rounded-full" style="background:${t.primary}"></span>
+              <span class="w-3.5 h-3.5 rounded-full" style="background:${t.secondary}"></span>
+              <span class="w-3.5 h-3.5 rounded-full" style="background:${t.tertiary}"></span>
+            </div>
+            <span class="text-[10px] font-bold" style="color:${t.primary}">${state.theme === t.id ? 'ACTIVE' : 'SELECT'}</span>
+          </div>
+          <div class="text-sm font-bold truncate">${t.name}</div>
+          <div class="font-arabic text-xs" style="color:${t.secondary}">${t.ar}</div>
+        </button>
+      `).join('');
+    }
+
+    function toggleVipModal(open) {
+      document.getElementById('vip-error').classList.add('hidden');
+      document.getElementById('vip-modal').classList.toggle('hidden', !open);
+    }
+
+    function activateVipCode() {
+      const code = document.getElementById('vip-input').value.trim().toUpperCase();
+      if (VIP_CODES.has(code)) {
+        state.vip = true;
+        saveState();
+        ui.selectedLevel = 'L3';
+        toggleVipModal(false);
+        render();
+      } else {
+        const err = document.getElementById('vip-error');
+        err.textContent = 'Invalid code. Try MARVEL-VIP, DESERT-FORCE, or CINEMA-2026.';
+        err.classList.remove('hidden');
+      }
+    }
+
+    function markMastered(id) {
+      state.vault = state.vault.filter(x => x !== id);
+      saveState();
+      render();
+    }
+
+    function render() {
+      const root = document.getElementById('app');
+      const rank = currentRank();
+      const badge = document.getElementById('vault-badge');
+      badge.textContent = state.vault.length;
+      badge.classList.toggle('hidden', state.vault.length === 0);
+      document.getElementById('bottom-nav').classList.toggle('hidden', Boolean(ui.session));
+
+      ['arena', 'vault', 'ranks'].forEach(t => {
+        const el = document.getElementById('nav-' + t);
+        el.style.color = ui.tab === t ? 'var(--primary)' : 'var(--muted)';
+      });
+
+      if (ui.session) {
+        const s = ui.session;
+        const q = s.questions[s.idx];
+        const mult = s.liveStreak >= 6 ? 4 : s.liveStreak >= 4 ? 3 : s.liveStreak >= 2 ? 2 : 1;
+        const pct = Math.round(((s.revealed ? s.idx + 1 : s.idx) / s.questions.length) * 100);
+        const rec = s.records[s.idx];
+        root.innerHTML = `
+          <div class="space-y-4 animate-pop">
+            <div class="flex items-center justify-between">
+              <button onclick="setTab('arena')" class="w-10 h-10 rounded-full border theme-elevated font-bold">✕</button>
+              <div class="text-center">
+                <div class="text-[11px] font-bold uppercase theme-primary-text">${s.vaultOnly ? 'VAULT DRILL' : s.levelId}</div>
+                <div class="text-sm font-bold">Challenge ${s.idx + 1}/${s.questions.length} • ${s.score} XP</div>
+              </div>
+              <div class="px-3 py-1.5 rounded-full border theme-secondary-badge text-xs font-bold">🔥 ${s.liveStreak} • ${mult}x</div>
+            </div>
+            <div class="w-full h-2.5 rounded-full theme-elevated border overflow-hidden">
+              <div class="h-full transition-all duration-300" style="width:${pct}%; background: linear-gradient(90deg, var(--primary), var(--tertiary), var(--secondary));"></div>
+            </div>
+            <div class="p-5 rounded-3xl border theme-surface space-y-3">
+              <div class="flex justify-between items-center text-xs">
+                <span class="px-2.5 py-1 rounded-full theme-elevated theme-primary-text font-bold">${q.cat}</span>
+                <span class="theme-secondary-text font-bold">+${q.xp * mult} XP</span>
+              </div>
+              <p class="text-lg font-bold leading-relaxed">${q.prompt}</p>
+            </div>
+            <div class="space-y-2.5">
+              ${q.options.map((opt, i) => {
+                let style = '';
+                if (s.revealed) {
+                  if (i === q.ans) style = 'border-color: var(--tertiary); background: color-mix(in srgb, var(--tertiary) 20%, var(--surface));';
+                  else if (i === s.selected) style = 'border-color: #ef4444; background: rgba(239,68,68,0.18);';
+                }
+                return `<button onclick="answerOption(${i})" ${s.revealed ? 'disabled' : ''} style="${style}"
+                  class="w-full p-4 rounded-2xl border theme-elevated flex items-center gap-3 text-left font-medium transition active:scale-[0.99]">
+                  <span class="w-8 h-8 rounded-full border theme-surface flex items-center justify-center text-xs font-bold">${String.fromCharCode(65 + i)}</span>
+                  <span class="flex-1">${opt}</span>
+                </button>`;
+              }).join('')}
+            </div>
+            ${s.revealed ? `
+              <div class="p-4 rounded-2xl border theme-surface space-y-3 animate-pop" style="border-color:${rec.ok ? 'var(--tertiary)' : '#ef4444'}">
+                <div class="flex justify-between items-center font-arabic font-bold text-sm">
+                  <span>${rec.ok ? 'عاش يا بطل! إجابة في الجون' : 'خلي بالك المرة الجاية!'}</span>
+                  ${rec.ok ? `<span class="theme-tertiary-text">+${rec.gained} XP</span>` : ''}
+                </div>
+                <p class="font-arabic text-sm leading-relaxed">${q.ar}</p>
+                <div class="p-3 rounded-xl border theme-secondary-badge font-arabic text-xs leading-relaxed">💡 ${q.tip}</div>
+                <button onclick="nextQuestion()" class="w-full py-3.5 rounded-2xl theme-primary-btn font-bold">
+                  ${s.idx + 1 >= s.questions.length ? 'Finish & View Report →' : 'Next Challenge →'}
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+        return;
+      }
+
+      if (ui.summary) {
+        const m = ui.summary;
+        const acc = Math.round((m.correct / m.total) * 100);
+        const shareText = encodeURIComponent(`🔥 Marvel in English (${m.levelId}) — Score: ${m.score} XP (${acc}% accuracy) | Rank: ${rank.title}`);
+        root.innerHTML = `
+          <div class="space-y-4 animate-pop">
+            <div class="p-5 rounded-3xl border theme-surface space-y-3">
+              <div class="text-xs font-bold uppercase theme-primary-text">Mission Report</div>
+              <h2 class="text-2xl font-bold">${m.levelId} • ${acc}% Accuracy</h2>
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="p-3 rounded-2xl theme-elevated"><div class="font-bold theme-primary-text">+${m.score} XP</div><div class="text-[11px] opacity-70">Score</div></div>
+                <div class="p-3 rounded-2xl theme-elevated"><div class="font-bold theme-tertiary-text">${m.correct}/${m.total}</div><div class="text-[11px] opacity-70">Correct</div></div>
+                <div class="p-3 rounded-2xl theme-elevated"><div class="font-bold theme-secondary-text">${m.maxStreak}x</div><div class="text-[11px] opacity-70">Max Fire</div></div>
+              </div>
+            </div>
+            <a href="https://wa.me/?text=${shareText}" target="_blank" class="block w-full py-3.5 rounded-2xl text-center font-bold border theme-secondary-badge">Share Victory on WhatsApp</a>
+            ${m.missed.map(q => `
+              <div class="p-4 rounded-2xl border theme-surface space-y-2">
+                <div class="font-bold text-sm">${q.prompt}</div>
+                <div class="text-xs font-bold theme-tertiary-text">Answer: ${q.options[q.ans]}</div>
+                <p class="font-arabic text-sm">${q.ar}</p>
+              </div>
+            `).join('')}
+            <div class="flex gap-2">
+              <button onclick="setTab('arena')" class="flex-1 py-3.5 rounded-2xl border theme-elevated font-bold">Arena Hub</button>
+              <button onclick="startMission('${m.levelId}')" class="flex-1 py-3.5 rounded-2xl theme-primary-btn font-bold">Play Again</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (ui.tab === 'vault') {
+        const vq = QUESTIONS.filter(q => state.vault.includes(q.id));
+        root.innerHTML = `
+          <div class="space-y-4 animate-pop">
+            <div>
+              <div class="text-xs font-bold theme-secondary-text uppercase">Review Vault</div>
+              <h2 class="text-2xl font-bold">Missed Questions Archive</h2>
+            </div>
+            ${vq.length ? `<button onclick="startMission('L1', true)" class="w-full py-3.5 rounded-2xl font-bold border theme-secondary-badge">Drill ${vq.length} Vault Challenges</button>` : ''}
+            ${vq.length ? vq.map(q => `
+              <div class="p-4 rounded-2xl border theme-surface space-y-2">
+                <div class="flex justify-between text-xs font-bold"><span class="theme-primary-text">${q.level} • ${q.cat}</span><span class="theme-secondary-text">${q.tag}</span></div>
+                <div class="font-semibold text-sm">${q.prompt}</div>
+                <div class="text-xs font-bold theme-tertiary-text">Answer: ${q.options[q.ans]}</div>
+                <p class="font-arabic text-sm">${q.ar}</p>
+                <div class="p-2.5 rounded-xl border theme-secondary-badge font-arabic text-xs">💡 ${q.tip}</div>
+                <button onclick="markMastered('${q.id}')" class="w-full py-2.5 rounded-xl border theme-elevated text-xs font-bold theme-tertiary-text">Mark as Mastered</button>
+              </div>
+            `).join('') : `<div class="p-8 rounded-3xl border theme-surface text-center space-y-2"><div class="text-3xl">✨</div><div class="font-bold">Your Review Vault is Clear!</div></div>`}
+          </div>
+        `;
+        return;
+      }
+
+      if (ui.tab === 'ranks') {
+        root.innerHTML = `
+          <div class="space-y-4 animate-pop">
+            <div class="p-5 rounded-3xl border theme-surface flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold theme-secondary-text">THE DESERT FORCE</div>
+                <h2 class="text-xl font-bold">${rank.title}</h2>
+                <div class="font-arabic text-sm theme-primary-text">${rank.ar} • ${state.xp} XP</div>
+              </div>
+              <button onclick="toggleThemeModal(true)" class="px-3.5 py-2 rounded-xl theme-primary-btn text-xs font-bold">🎨 10 Themes</button>
+            </div>
+            <div class="space-y-2.5">
+              ${RANKS.map(r => {
+                const unlocked = state.xp >= r.minXp;
+                return `
+                  <div class="p-4 rounded-2xl border theme-surface space-y-1" style="opacity:${unlocked ? 1 : 0.6}">
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold">${unlocked ? '✅' : '🔒'} ${r.title}</span>
+                      <span class="text-xs font-bold theme-primary-text">${r.minXp} XP</span>
+                    </div>
+                    <div class="font-arabic text-xs theme-secondary-text">${r.ar}</div>
+                    <p class="font-arabic text-xs opacity-85">${r.motto}</p>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Arena Hub
+      const activeTheme = THEMES.find(t => t.id === state.theme) || THEMES[0];
+      root.innerHTML = `
+        <div class="space-y-4 animate-pop">
+          <div class="p-5 rounded-3xl border theme-surface space-y-3" style="background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 14%, var(--surface)), var(--surface));">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="px-3 py-1 rounded-full border theme-secondary-badge text-xs font-bold">🛡️ ${rank.title}</span>
+              <div class="flex gap-2">
+                <button onclick="toggleVipModal(true)" class="px-3 py-1 rounded-full border text-xs font-bold ${state.vip ? 'theme-tertiary-text border-current' : 'theme-secondary-badge'}">
+                  ${state.vip ? '👑 VIP ACTIVE' : '🔑 VIP CODE'}
+                </button>
+                <span class="px-3 py-1 rounded-full border theme-elevated text-xs font-bold theme-primary-text">⚡ ${state.xp} XP</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs font-bold tracking-widest theme-primary-text">MARVEL IN ENGLISH</div>
+              <h1 class="text-3xl font-extrabold">The Ultimate Arena</h1>
+              <p class="text-xs opacity-80">CEFR Levels 1–3 • Idioms, Proverbs &amp; Cinematic Slang</p>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl border theme-surface flex items-center justify-between">
+            <div>
+              <div class="text-xs opacity-75">Active Theme</div>
+              <div class="text-sm font-bold">${activeTheme.name} <span class="font-arabic text-xs theme-secondary-text">(${activeTheme.ar})</span></div>
+            </div>
+            <button onclick="toggleThemeModal(true)" class="px-3.5 py-2 rounded-xl theme-primary-btn text-xs font-bold">🎨 10 Themes</button>
+          </div>
+
+          <div class="space-y-2.5">
+            <h2 class="text-lg font-bold">Choose CEFR Learning Track</h2>
+            ${LEVELS.map(l => {
+              const locked = l.vip && !state.vip;
+              const selected = ui.selectedLevel === l.id;
+              return `
+                <button onclick="selectLevel('${l.id}')" class="w-full p-4 rounded-2xl border text-left flex items-center justify-between gap-3 transition"
+                  style="background:${selected ? 'var(--elevated)' : 'var(--surface)'}; border-color:${selected ? 'var(--primary)' : 'var(--border)'}; border-width:${selected ? '2px' : '1px'};">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold theme-elevated theme-primary-text">${l.short} • ${l.cefr}</span>
+                      ${l.vip ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border theme-secondary-badge">${locked ? '🔒 VIP' : '👑 VIP'}</span>` : ''}
+                    </div>
+                    <div class="font-bold text-base">${l.title}</div>
+                    <div class="text-xs opacity-75">${l.desc}</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-sm font-bold theme-primary-text">${locked ? 'Unlock' : (state.high[l.id] || 0) + ' XP'}</div>
+                    <div class="text-[10px] opacity-60">${locked ? 'Code' : 'Best'}</div>
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          <button onclick="startMission()" class="w-full py-4 rounded-2xl theme-primary-btn font-extrabold text-base shadow-lg">
+            ▶ Launch ${LEVELS.find(l => l.id === ui.selectedLevel).short} Mission
+          </button>
+        </div>
+      `;
+    }
+
+    applyTheme(state.theme);
+    render();
+  </script>
+</body>
+</html>
