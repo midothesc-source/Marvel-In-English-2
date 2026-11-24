@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.MilitaryTech
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -57,6 +59,7 @@ import com.example.ui.ArenaViewModel
 import com.example.ui.components.ThemePickerSheet
 import com.example.ui.components.VipUnlockDialog
 import com.example.ui.screens.ArenaHubScreen
+import com.example.ui.screens.CodexLibraryScreen
 import com.example.ui.screens.DesertRanksScreen
 import com.example.ui.screens.PerformanceSummaryScreen
 import com.example.ui.screens.QuizArenaScreen
@@ -65,6 +68,7 @@ import com.example.ui.theme.LocalArenaColors
 import com.example.ui.theme.MarvelArenaTheme
 
 const val ROUTE_ARENA = "arena"
+const val ROUTE_CODEX = "codex"
 const val ROUTE_VAULT = "vault"
 const val ROUTE_RANKS = "ranks"
 
@@ -81,6 +85,12 @@ private val TopNavTabs = listOf(
         label = "Arena",
         selectedIcon = Icons.Filled.Bolt,
         unselectedIcon = Icons.Outlined.Bolt
+    ),
+    NavTabItem(
+        route = ROUTE_CODEX,
+        label = "Codex",
+        selectedIcon = Icons.Filled.MenuBook,
+        unselectedIcon = Icons.Outlined.MenuBook
     ),
     NavTabItem(
         route = ROUTE_VAULT,
@@ -298,6 +308,13 @@ fun MarvelArenaApp(
                                     }
                                 }
                             }
+                        }
+
+                        composable(ROUTE_CODEX) {
+                            CodexLibraryScreen(
+                                isVipUnlocked = uiState.userProgress.isVipUnlocked,
+                                onOpenVipDialog = viewModel::openVipDialog
+                            )
                         }
 
                         composable(ROUTE_VAULT) {

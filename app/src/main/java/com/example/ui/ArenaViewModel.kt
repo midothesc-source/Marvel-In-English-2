@@ -118,20 +118,10 @@ class ArenaViewModel(application: Application) : AndroidViewModel(application) {
     )
 
     fun selectLevel(level: CefrLevel) {
-        val vipUnlocked = uiState.value.userProgress.isVipUnlocked
-        if (level.isVipRequired && !vipUnlocked) {
-            openVipDialog()
-            return
-        }
         transientState.update { it.copy(selectedLevel = level) }
     }
 
     fun selectCategoryFilter(category: SkillCategory?) {
-        val vipUnlocked = uiState.value.userProgress.isVipUnlocked
-        if (category != null && category.isVipRequired && !vipUnlocked) {
-            openVipDialog()
-            return
-        }
         transientState.update { it.copy(selectedCategoryFilter = category) }
     }
 
@@ -151,13 +141,12 @@ class ArenaViewModel(application: Application) : AndroidViewModel(application) {
             transientState.update {
                 it.copy(
                     showVipDialog = false,
-                    vipError = null,
-                    selectedLevel = CefrLevel.LEVEL_3
+                    vipError = null
                 )
             }
         } else {
             transientState.update {
-                it.copy(vipError = "Invalid code. Try MARVEL-VIP, DESERT-FORCE, or CINEMA-2026.")
+                it.copy(vipError = "Invalid code. Please check your code or activate via WhatsApp B2B (+201126542477).")
             }
         }
     }
@@ -167,13 +156,11 @@ class ArenaViewModel(application: Application) : AndroidViewModel(application) {
         categoryFilter: SkillCategory? = transientState.value.selectedCategoryFilter
     ) {
         val vipUnlocked = uiState.value.userProgress.isVipUnlocked
-        if ((level.isVipRequired || (categoryFilter?.isVipRequired == true)) && !vipUnlocked) {
-            openVipDialog()
-            return
-        }
-
-        val pool = QuestionBank.questionsForMission(level, categoryFilter)
-        val effectivePool = if (pool.isEmpty()) QuestionBank.questionsForMission(level, null) else pool
+        val effectivePool = QuestionBank.questionsForMission(
+            level = level,
+            categoryFilter = categoryFilter,
+            isVipUnlocked = vipUnlocked
+        )
         if (effectivePool.isEmpty()) return
 
         transientState.update {

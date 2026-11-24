@@ -5,44 +5,40 @@ enum class CefrLevel(
     val title: String,
     val badge: String,
     val subtitle: String,
-    val cefrRange: String,
-    val isVipRequired: Boolean
+    val cefrRange: String
 ) {
     LEVEL_1(
         shortTitle = "Level 1",
         title = "Beginner & Essential Idioms",
         badge = "LVL 1 • A2–B1 Foundation",
-        subtitle = "Foundational phrasal verbs & everyday expressions",
-        cefrRange = "A2–B1",
-        isVipRequired = false
+        subtitle = "Core idioms, everyday proverbs & essential phrasal verbs",
+        cefrRange = "A2–B1"
     ),
     LEVEL_2(
         shortTitle = "Level 2",
         title = "Intermediate & Colloquial Power",
         badge = "LVL 2 • B1–B2 Power",
-        subtitle = "B1–B2 idioms, proverbs & conversational collocations",
-        cefrRange = "B1–B2",
-        isVipRequired = false
+        subtitle = "B1–B2 idioms, proverbs, phrasal verbs & collocations",
+        cefrRange = "B1–B2"
     ),
     LEVEL_3(
         shortTitle = "Level 3",
         title = "Advanced & Cinematic Mastery",
-        badge = "LVL 3 • C1–C2 VIP",
-        subtitle = "High-level idioms, cinematic slang & advanced expressions",
-        cefrRange = "C1–C2",
-        isVipRequired = true
+        badge = "LVL 3 • C1–C2 Mastery",
+        subtitle = "Advanced idioms, timeless proverbs & Hollywood slang",
+        cefrRange = "C1–C2"
     )
 }
 
 enum class SkillCategory(
     val label: String,
-    val arabicLabel: String,
-    val isVipRequired: Boolean = false
+    val arabicLabel: String
 ) {
-    PHRASAL_VERBS("Phrasal Verbs", "الأفعال الاصطلاحية", false),
-    COLLOCATIONS("Collocations & Proverbs", "المتلازمات والأمثال", false),
-    IDIOMATIC_POWER("Idioms & Expressions", "التعبيرات الاصطلاحية", false),
-    CINEMATIC_SLANG("Cinematic & Slang", "لغة السينما والاحتراف", true)
+    IDIOMATIC_POWER("Idioms", "التعبيرات الاصطلاحية"),
+    PROVERBS("Proverbs", "الأمثال والحكم"),
+    PHRASAL_VERBS("Phrasal Verbs", "الأفعال الاصطلاحية"),
+    COLLOCATIONS("Collocations", "المتلازمات اللفظية"),
+    CINEMATIC_SLANG("Cinematic & Slang", "لغة السينما والاحتراف")
 }
 
 data class QuizQuestion(
@@ -55,7 +51,8 @@ data class QuizQuestion(
     val correctIndex: Int,
     val explanationAr: String,
     val proTipAr: String,
-    val baseXp: Int = 25
+    val baseXp: Int = 25,
+    val isVipOnly: Boolean = false
 )
 
 data class DesertRank(

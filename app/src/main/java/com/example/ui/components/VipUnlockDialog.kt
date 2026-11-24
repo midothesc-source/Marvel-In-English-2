@@ -5,14 +5,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.AlertDialog
@@ -20,11 +19,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,8 +33,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.example.ui.theme.CairoFontFamily
 import com.example.ui.theme.LocalArenaColors
@@ -45,6 +49,7 @@ fun VipUnlockDialog(
     onDismiss: () -> Unit
 ) {
     val colors = LocalArenaColors.current
+    val context = LocalContext.current
     var codeInput by remember { mutableStateOf("") }
 
     AlertDialog(
@@ -71,23 +76,26 @@ fun VipUnlockDialog(
         },
         title = {
             Text(
-                text = "Unlock VIP Mastery",
+                text = "Unlock 100% Full Access",
                 style = MaterialTheme.typography.titleLarge
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = "Enter your VIP Activation Code to unlock Level 3 (Advanced & Cinematic Mastery) and Cinematic Slang drills.",
+                    text = "50% of all idioms, proverbs, phrasal verbs, and slang is completely free. Enter your activation code to unlock the remaining 50%, or activate via WhatsApp B2B.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.textSecondary
                 )
-                Text(
-                    text = "اكتب كود التفعيل عشان تفتح المستوى التالت ولغة السينما والاحتراف.",
-                    fontFamily = CairoFontFamily,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.secondary
-                )
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Text(
+                        text = "50% من المحتوى مجاني بالكامل! اكتب كود التفعيل لفتح الـ 50% الباقية أو فعّل مباشرة عن طريق واتساب B2B.",
+                        fontFamily = CairoFontFamily,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.secondary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 OutlinedTextField(
                     value = codeInput,
@@ -100,8 +108,8 @@ fun VipUnlockDialog(
                             tint = colors.primary
                         )
                     },
-                    label = { Text("VIP Activation Code") },
-                    placeholder = { Text("e.g. MARVEL-VIP") },
+                    label = { Text("Activation Code") },
+                    placeholder = { Text("Enter activation code") },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
                         unfocusedBorderColor = colors.cardBorder,
@@ -119,20 +127,32 @@ fun VipUnlockDialog(
                         style = MaterialTheme.typography.labelMedium,
                         color = colors.error
                     )
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(colors.primaryContainer.copy(alpha = 0.5f))
-                            .padding(horizontal = 10.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = "Demo code: MARVEL-VIP",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = colors.onPrimaryContainer
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        WhatsAppHelper.openWhatsAppB2B(
+                            context = context,
+                            message = WhatsAppHelper.buildVipActivationMessage()
                         )
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("vip_whatsapp_b2b_button"),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.tertiary)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Chat,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text(
+                        text = "WhatsApp B2B (${WhatsAppHelper.B2B_WHATSAPP_DISPLAY})",
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         },
@@ -146,7 +166,7 @@ fun VipUnlockDialog(
                 ),
                 modifier = Modifier.testTag("vip_unlock_confirm_button")
             ) {
-                Text("Activate VIP", fontWeight = FontWeight.Bold)
+                Text("Activate Full 100%", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {

@@ -74,10 +74,13 @@ fun ArenaHubScreen(
     val colors = LocalArenaColors.current
     val progress = uiState.userProgress
     val selectedLevel = uiState.selectedLevel
+    val unlockedCount = QuestionBank.accessibleQuestions(progress.isVipUnlocked).size
+    val totalCount = QuestionBank.allQuestions.size
     val questionCountForSelection = QuestionBank.questionsForMission(
         level = selectedLevel,
-        categoryFilter = uiState.selectedCategoryFilter
-    ).let { if (it.isEmpty()) QuestionBank.questionsForMission(selectedLevel, null) else it }.size.coerceAtMost(10)
+        categoryFilter = uiState.selectedCategoryFilter,
+        isVipUnlocked = progress.isVipUnlocked
+    ).size.coerceAtMost(10)
 
     Box(
         modifier = modifier.fillMaxSize(),
@@ -175,7 +178,7 @@ fun ArenaHubScreen(
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Text(
-                                        text = if (progress.isVipUnlocked) "VIP ACTIVE" else "VIP CODE",
+                                        text = if (progress.isVipUnlocked) "100% VIP" else "50% FREE",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Color.White,
                                         fontWeight = FontWeight.Bold
@@ -399,6 +402,69 @@ fun ArenaHubScreen(
                 }
             }
 
+            // 50% Free / 50% VIP Access Banner
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(
+                            if (progress.isVipUnlocked) colors.tertiaryContainer.copy(alpha = 0.55f)
+                            else colors.secondaryContainer.copy(alpha = 0.65f)
+                        )
+                        .border(
+                            1.dp,
+                            if (progress.isVipUnlocked) colors.tertiary else colors.secondary,
+                            RoundedCornerShape(18.dp)
+                        )
+                        .clickable(onClick = onOpenVipDialog)
+                        .padding(14.dp)
+                        .testTag("access_tier_banner"),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Text(
+                            text = if (progress.isVipUnlocked) {
+                                "Full Arena Unlocked ($unlockedCount / $totalCount)"
+                            } else {
+                                "Free 50% Edition ($unlockedCount / $totalCount Active)"
+                            },
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.textPrimary
+                        )
+                        Text(
+                            text = if (progress.isVipUnlocked) {
+                                "All idioms, proverbs, phrasal verbs & cinematic slang unlocked"
+                            } else {
+                                "Activate remaining 50% via code or WhatsApp B2B (+201126542477)"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.textSecondary
+                        )
+                    }
+                    if (!progress.isVipUnlocked) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(colors.secondary)
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = "Activate",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = colors.onSecondary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
             // Progressive CEFR Level Selector (Levels 1, 2, 3)
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -409,11 +475,14 @@ fun ArenaHubScreen(
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         CefrLevel.entries.forEach { level ->
-                            val isLocked = level.isVipRequired && !progress.isVipUnlocked
+                            val freeInLevel = QuestionBank.allQuestions.count { it.level == level && !it.isVipOnly }
+                            val totalInLevel = QuestionBank.allQuestions.count { it.level == level }
                             CefrLevelCard(
                                 level = level,
                                 isSelected = selectedLevel == level,
-                                isLocked = isLocked,
+                                isVipUnlocked = progress.isVipUnlocked,
+                                unlockedCount = if (progress.isVipUnlocked) totalInLevel else freeInLevel,
+                                totalCount = totalInLevel,
                                 highScore = progress.highScoreFor(level),
                                 onClick = { onSelectLevel(level) },
                                 modifier = Modifier.testTag("level_card_${level.name.lowercase()}")
@@ -450,19 +519,9 @@ fun ArenaHubScreen(
                             modifier = Modifier.testTag("filter_all")
                         )
                         SkillCategory.entries.forEach { category ->
-                            val lockedCat = category.isVipRequired && !progress.isVipUnlocked
                             FilterChip(
                                 selected = uiState.selectedCategoryFilter == category,
                                 onClick = { onSelectCategory(category) },
-                                leadingIcon = if (lockedCat) {
-                                    {
-                                        Icon(
-                                            imageVector = Icons.Filled.Lock,
-                                            contentDescription = "VIP Category",
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                    }
-                                } else null,
                                 label = { Text(category.label) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = colors.primaryContainer,
@@ -594,7 +653,9 @@ private fun StatTile(
 private fun CefrLevelCard(
     level: CefrLevel,
     isSelected: Boolean,
-    isLocked: Boolean,
+    isVipUnlocked: Boolean,
+    unlockedCount: Int,
+    totalCount: Int,
     highScore: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -642,28 +703,26 @@ private fun CefrLevelCard(
                     )
                 }
 
-                if (level.isVipRequired) {
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(colors.secondaryContainer)
-                            .padding(horizontal = 8.dp, vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isLocked) Icons.Filled.Lock else Icons.Filled.WorkspacePremium,
-                            contentDescription = "VIP",
-                            tint = colors.secondary,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Text(
-                            text = if (isLocked) "VIP LOCKED" else "VIP UNLOCKED",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.onSecondaryContainer,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(colors.secondaryContainer)
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isVipUnlocked) Icons.Filled.WorkspacePremium else Icons.Filled.Lock,
+                        contentDescription = "Access status",
+                        tint = colors.secondary,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        text = "$unlockedCount/$totalCount Open",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.onSecondaryContainer,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
@@ -682,13 +741,13 @@ private fun CefrLevelCard(
 
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = if (isLocked) "Unlock" else "$highScore XP",
+                text = "$highScore XP",
                 style = MaterialTheme.typography.labelLarge,
                 color = accent,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = if (isLocked) "Enter Code" else "Best",
+                text = "Best",
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.textMuted
             )

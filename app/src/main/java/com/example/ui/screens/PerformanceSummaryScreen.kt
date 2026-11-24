@@ -298,7 +298,7 @@ fun PerformanceSummaryScreen(
                         OutlinedButton(
                             onClick = {
                                 val msg = WhatsAppHelper.buildTutorInquiryMessage(summary, currentRank)
-                                WhatsAppHelper.shareToWhatsApp(context, msg)
+                                WhatsAppHelper.openWhatsAppB2B(context, msg)
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -313,7 +313,7 @@ fun PerformanceSummaryScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.size(6.dp))
-                            Text("Ask Tutor", fontWeight = FontWeight.Bold)
+                            Text("WhatsApp B2B", fontWeight = FontWeight.Bold)
                         }
                     }
                 }

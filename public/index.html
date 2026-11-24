@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Marvel in English: The Ultimate Arena</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070B16; --surface: #0E1528; --elevated: #151F38; --border: #263456;
+      --primary: #00E5FF; --on-primary: #070B16; --secondary: #FFB300; --on-secondary: #070B16;
+      --tertiary: #00E676; --text: #F1F5F9; --muted: #94A3B8;
+    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
+    h1, h2, h3, .font-display { font-family: 'Outfit', sans-serif; }
+    .font-arabic { font-family: 'Cairo', sans-serif; direction: rtl; text-align: right; }
+    .theme-surface { background-color: var(--surface); border-color: var(--border); }
+    .theme-elevated { background-color: var(--elevated); border-color: var(--border); }
+    .theme-primary-btn { background-color: var(--primary); color: var(--on-primary); }
+    .theme-secondary-badge { background-color: color-mix(in srgb, var(--secondary) 18%, transparent); color: var(--secondary); border-color: color-mix(in srgb, var(--secondary) 55%, transparent); }
+    .theme-primary-text { color: var(--primary); }
+    .theme-secondary-text { color: var(--secondary); }
+    .theme-tertiary-text { color: var(--tertiary); }
+    @keyframes popIn { 0% { opacity: 0; transform: translateY(8px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+    .animate-pop { animation: popIn 0.22s ease-out forwards; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-24">
+  <div id="app" class="w-full max-w-xl px-4 pt-4 space-y-4"></div>
+
+  <nav id="bottom-nav" class="fixed bottom-0 inset-x-0 z-30 border-t theme-surface backdrop-blur-md">
+    <div class="max-w-xl mx-auto grid grid-cols-4 h-16">
+      <button onclick="setTab('arena')" id="nav-arena" class="flex flex-col items-center justify-center text-xs font-semibold gap-1"><span>⚡</span><span>Arena</span></button>
+      <button onclick="setTab('codex')" id="nav-codex" class="flex flex-col items-center justify-center text-xs font-semibold gap-1"><span>📖</span><span>Codex</span></button>
+      <button onclick="setTab('vault')" id="nav-vault" class="flex flex-col items-center justify-center text-xs font-semibold gap-1 relative">
+        <span>📦</span><span>Vault <span id="vault-badge" class="hidden ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"></span></span>
+      </button>
+      <button onclick="setTab('ranks')" id="nav-ranks" class="flex flex-col items-center justify-center text-xs font-semibold gap-1"><span>🏆</span><span>Ranks</span></button>
+    </div>
+  </nav>
+
+  <div id="theme-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3">
+    <div class="w-full max-w-lg rounded-3xl border theme-surface p-5 max-h-[82vh] flex flex-col gap-3 animate-pop">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-bold">Arena Theme Studio (10 Themes)</h3>
+          <p class="text-xs opacity-75">Saved automatically to your device</p>
+        </div>
+        <button onclick="toggleThemeModal(false)" class="px-3 py-1.5 rounded-xl border theme-elevated text-xs font-bold">Close</button>
+      </div>
+      <div id="theme-grid" class="grid grid-cols-2 gap-2.5 overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+
+  <div id="vip-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-3xl border theme-surface p-5 space-y-3 animate-pop">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-xl border theme-secondary-badge">👑</div>
+        <div>
+          <h3 class="text-lg font-bold">Unlock 100% Full Access</h3>
+          <p class="text-xs opacity-75">50% Free • Unlock the remaining 50%</p>
+        </div>
+      </div>
+      <p class="text-sm opacity-85">50% of all idioms, proverbs, phrasal verbs, and slang is completely free. Enter your activation code or request instant activation via WhatsApp B2B.</p>
+      <p class="font-arabic text-sm theme-secondary-text">50% من المحتوى مجاني بالكامل! اكتب كود التفعيل لفتح الـ 50% الباقية أو فعّل مباشرة عن طريق واتساب B2B.</p>
+      <input id="vip-input" type="text" placeholder="Enter activation code" class="w-full px-4 py-3 rounded-xl border theme-elevated text-sm font-semibold tracking-wider outline-none" />
+      <p id="vip-error" class="text-xs text-red-400 hidden"></p>
+      <a id="wa-b2b-link" target="_blank" rel="noopener" class="block w-full py-3 rounded-xl border text-center text-sm font-bold theme-tertiary-text border-current">
+        💬 Activate via WhatsApp B2B (+201126542477)
+      </a>
+      <div class="flex gap-2 pt-1">
+        <button onclick="toggleVipModal(false)" class="flex-1 py-3 rounded-xl border theme-elevated text-sm font-bold">Cancel</button>
+        <button onclick="activateVipCode()" class="flex-1 py-3 rounded-xl theme-primary-btn text-sm font-bold">Activate Full 100%</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const WHATSAPP_B2B = '201126542477';
+    const ACTIVATION_CODE = 'Desert_Force';
+    const THEMES = [
+      { id: 'desert_force', name: 'Desert Force', ar: 'قوة الصحراء', bg: '#070B16', surface: '#0E1528', elevated: '#151F38', border: '#263456', primary: '#00E5FF', onPrimary: '#070B16', secondary: '#FFB300', onSecondary: '#070B16', tertiary: '#00E676', text: '#F1F5F9', muted: '#94A3B8' },
+      { id: 'nile_oasis', name: 'Nile Oasis', ar: 'واحة النيل', bg: '#041418', surface: '#0A2128', elevated: '#11303A', border: '#1E4B59', primary: '#14F1D9', onPrimary: '#041418', secondary: '#FFD54F', onSecondary: '#041418', tertiary: '#4ADE80', text: '#ECFEFF', muted: '#99C2CC' },
+      { id: 'cairo_sunset', name: 'Cairo Sunset', ar: 'غروب القاهرة', bg: '#14071B', surface: '#210E2C', elevated: '#2F163E', border: '#4B2563', primary: '#FF7A3D', onPrimary: '#14071B', secondary: '#FF4D94', onSecondary: '#14071B', tertiary: '#FFD166', text: '#FDF4FF', muted: '#CBB2DB' },
+      { id: 'cyber_pharaoh', name: 'Cyber Pharaoh', ar: 'فرعون المستقبل', bg: '#090518', surface: '#140C2E', elevated: '#1F1445', border: '#392773', primary: '#C084FC', onPrimary: '#090518', secondary: '#FACC15', onSecondary: '#090518', tertiary: '#38BDF8', text: '#F5F3FF', muted: '#B8AEE0' },
+      { id: 'siwa_emerald', name: 'Siwa Emerald', ar: 'زمردة سيوة', bg: '#04120C', surface: '#0A2117', elevated: '#113123', border: '#1E523B', primary: '#10F5A4', onPrimary: '#04120C', secondary: '#FB923C', onSecondary: '#04120C', tertiary: '#A3E635', text: '#ECFDF5', muted: '#9ACBB5' },
+      { id: 'red_sea_coral', name: 'Red Sea Coral', ar: 'شعاب البحر الأحمر', bg: '#061024', surface: '#0D1D3B', elevated: '#152B52', border: '#24437A', primary: '#FF5E7E', onPrimary: '#061024', secondary: '#22D3EE', onSecondary: '#061024', tertiary: '#FDE047', text: '#F0F7FF', muted: '#A5BBE0' },
+      { id: 'alexandria_breeze', name: 'Alexandria Breeze', ar: 'نسيم إسكندرية', bg: '#F0F8FC', surface: '#FFFFFF', elevated: '#E3F2FA', border: '#BDDDF0', primary: '#0066E6', onPrimary: '#FFFFFF', secondary: '#E65100', onSecondary: '#FFFFFF', tertiary: '#00996D', text: '#0B1F3A', muted: '#3E5A7D' },
+      { id: 'luxor_daylight', name: 'Luxor Sandstone', ar: 'شمس الأقصر', bg: '#FDF7EC', surface: '#FFFFFD', elevated: '#F5EAD6', border: '#E2CCA8', primary: '#1D4ED8', onPrimary: '#FFFFFF', secondary: '#C2410C', onSecondary: '#FFFFFF', tertiary: '#0F766E', text: '#23180D', muted: '#5C4730' },
+      { id: 'giza_twilight', name: 'Giza Twilight', ar: 'شفق الجيزة', bg: '#0B0D21', surface: '#141838', elevated: '#1E2452', border: '#333D7A', primary: '#F59E0B', onPrimary: '#0B0D21', secondary: '#818CF8', onSecondary: '#0B0D21', tertiary: '#2DD4BF', text: '#F3F4FF', muted: '#A7B0DC' },
+      { id: 'mint_frost', name: 'Mint Frost', ar: 'ندى النعناع', bg: '#ECFDF5', surface: '#FFFFFF', elevated: '#D9F7E9', border: '#A7E8CA', primary: '#059669', onPrimary: '#FFFFFF', secondary: '#DB2777', onSecondary: '#FFFFFF', tertiary: '#4F46E5', text: '#062C22', muted: '#2B6150' }
+    ];
+    const LEVELS = [
+      { id: 'L1', short: 'Level 1', title: 'Beginner & Essential Idioms', cefr: 'A2–B1', desc: 'Core idioms, everyday proverbs & essential phrasal verbs' },
+      { id: 'L2', short: 'Level 2', title: 'Intermediate & Colloquial Power', cefr: 'B1–B2', desc: 'B1–B2 idioms, proverbs, phrasal verbs & collocations' },
+      { id: 'L3', short: 'Level 3', title: 'Advanced & Cinematic Mastery', cefr: 'C1–C2', desc: 'Advanced idioms, timeless proverbs & Hollywood slang' }
+    ];
+    const CATEGORIES = ['All', 'Idioms', 'Proverbs', 'Phrasal Verbs', 'Collocations', 'Cinematic & Slang'];
+    const RANKS = [
+      { id: 'scout', title: 'Desert Scout', ar: 'كشّاف الصحراء', minXp: 0, motto: 'أول خطوة في الصحرا بتفرق بين المتفرج والبطل.' },
+      { id: 'pathfinder', title: 'Sand Pathfinder', ar: 'دليل الرمال', minXp: 150, motto: 'عينك بدأت تلقط التعبيرات والتريكات قبل ما تقع فيها.' },
+      { id: 'vanguard', title: 'Oasis Vanguard', ar: 'طليعة الواحة', minXp: 350, motto: 'ثابت في الكلام، وكلمتك دايماً في الجون.' },
+      { id: 'tactician', title: 'Mirage Tactician', ar: 'مخطط السراب', minXp: 650, motto: 'الأمثال والمتلازمات اللفظية بقت بتطلع منك بسلاسة.' },
+      { id: 'commander', title: 'Falcon Commander', ar: 'قائد الصقور', minXp: 1000, motto: 'تركيزك عالي وإنجليزيتك بتتكلم زي نجوم السينما.' },
+      { id: 'master', title: 'Desert Force Master', ar: 'سيد قوة الصحراء', minXp: 1500, motto: 'أسطورة الساحة.. قفلت اللعبة يا بطل!' }
+    ];
+
+    // Format: [id, level, category, tag, prompt, options, ans, ar, tip, vip(0|1)]
+    // Exact 160 items: 80 Free (50%) + 80 VIP (50%) across Idioms (50), Proverbs (40), Phrasal Verbs (50), Collocations & Cinematic Slang (20)
+    const RAW_Q = [
+      // 25 FREE IDIOMS
+      ['id_01','L1','Idioms','piece of cake',"Don't stress about today's quiz—after studying all week, it will be a _____!",['piece of cake','cup of tea','slice of bread','drop of water'],0,'التعبير a piece of cake معناه حاجة سهلة جداً زي شرب الميه.','حركة فنان: في العربي بنقول سهل مية وفي الإنجليزي حتة تورتة = a piece of cake!',0],
+      ['id_02','L1','Idioms','under the weather','Salma skipped training tonight because she is feeling a bit _____.',['over the moon','under the weather','in hot water','on cloud nine'],1,'تعبير under the weather معناه تعبان شوية أو حاسس بإرهاق وبرد خفيف.','حركة فنان: مضغوط تحت الغيوم = صحتك مش تمام: under the weather!',0],
+      ['id_03','L1','Idioms','break a leg','Before Nadia walked onto the stage, her friends smiled and shouted, "_____!"',['Break a leg','Hit the sack','Pull my leg','Miss the boat'],0,'في المسرح والسينما لما تقول لحد Break a leg معناها بالتوفيق وتكسر الدنيا!', 'حركة فنان: في مصر بنقول هتكسر الدنيا قبل العرض، وفي الإنجليزي Break a leg!',0],
+      ['id_04','L1','Idioms','hit the sack',"It's past midnight and I have an early flight—time to _____.",['hit the sack','hit the road','call it a day','cost an arm'],0,'التعبير hit the sack معناه العامي أنا داخل أنام خلاص من كتر التعب!','حركة فنان: زمان المراتب كانت شوال قش (sack)، ترمي نفسك عليه تنام = hit the sack!',0],
+      ['id_05','L1','Idioms','once in a blue moon','Tarek lives abroad now, so we only see him _____.',['once in a blue moon','around the clock','day in, day out','at the drop of a hat'],0,'معناه فين وفين أو نادراً جداً ما يحصل!','حركة فنان: القمر الأزرق ظاهرة نادرة جداً في السما = حاجة بتحصل كل فين وفين!',0],
+      ['id_06','L1','Idioms','cost an arm and a leg','That limited-edition gaming laptop looks amazing, but it _____.',['costs an arm and a leg','pays the piper','breaks the bank','breaks a leg'],0,'تعبير cost an arm and a leg معناه غالي جداً نار، يقطم الوسط!','حركة فنان: في مصر غالي يقطم الضهر، وفي الإنجليزي يكلف دراع ورجل!',0],
+      ['id_07','L2','Idioms','spill the beans',"We are planning a surprise party for Karim, so whatever you do, don't _____!",['break the ice','spill the beans','bite your tongue','burn bridges'],1,'تعبير spill the beans معناه يفضح السر بالغلط ويبوظ المفاجأة!','حركة فنان: لو وقعت الفول اتفضح الموضوع = أوعى تبق البحصة!',0],
+      ['id_08','L2','Idioms','break the ice','The presenter opened with a relatable Egyptian joke to _____ in the room.',['break the ice','rock the boat','kick the bucket','call the shots'],0,'تعبير break the ice معناه يكسر التوتر والكسوف في بداية أي قعدة.','حركة فنان: التلج بيجمد الجو، وأول ضحكة بتكسره = break the ice!',0],
+      ['id_09','L2','Idioms','hit the nail on the head','When you said the real problem is timing, not budget, you _____.',['missed the point','hit the nail on the head','beat around the bush','sat on the fence'],1,'معناه جبت التايهة أو وصفت المشكلة بالظبط في الصميم!','حركة فنان: خبطت على راس المسمار من أول دقة = جبت الكلام في الجون!',0],
+      ['id_10','L3','Idioms','bite the bullet',"I've delayed fixing this tricky bug all week—time to _____ and tackle it head-on.",['bite the bullet','dodge a bullet','bite off more','take a rain check'],0,'تعبير bite the bullet معناه تشد على نفسك وتواجه موقف صعب بشجاعة.','حركة فنان: dodge a bullet = فلتت من مصيبة. bite the bullet = واجهت الصعب بشجاعة!',0],
+      ['id_11','L1','Idioms','let the cat out of the bag','Omar accidentally _____ about the secret trip to Dahab.',['let the cat out of the bag','put the cart before the horse','held his horses','barked up the wrong tree'],0,'معناه كشف السر من غير قصد!','حركة فنان: القطة نطت من الشنطة والكل شافها = السر انكشف!',0],
+      ['id_12','L3','Idioms','burn the midnight oil','The students had to _____ all week to finish their graduation project on time.',['burn the midnight oil','burn their bridges','let off steam','call the shots'],0,'معناه يسهر يشتغل أو يذاكر لوش الفجر!','حركة فنان: تسهر تذاكر لحد الفجر = burn the midnight oil!',0],
+      ['id_13','L2','Idioms','cut corners','Never _____ on safety checks just to finish a building faster.',['cut corners','cut to the chase','cut it out','cut loose'],0,'معناه يستسهل ويكروت الشغل على حساب الجودة.','حركة فنان: قصيت الأركان بدل ما تلف اللفة كاملة = كروت الشغل!',0],
+      ['id_14','L3','Idioms','on the ball','Layla is really _____—she spotted the accounting error before anyone else.',['on the ball','under the table','off the hook','behind the scenes'],0,'معناه صاحي ومصحصح وسريع البديهة!','حركة فنان: لعيب الكورة اللي عينه على الكورة طول الماتش = on the ball!',0],
+      ['id_15','L1','Idioms','speak of the devil','We were just talking about Amir, and he walked right in—_____!',['speak of the devil','break the mold','bite your tongue','face the music'],0,'معناه جبنا سيرة القط جه ينط!','حركة فنان: في مصر ابن حلال لسه في سيرتك، وفي الإنجليزي speak of the devil!',0],
+      ['id_16','L1','Idioms',"pull someone's leg",'Wait, did you really win a free car, or are you just _____?',['pulling my leg','twisting my arm','breaking my heart','stepping on my toes'],0,'معناه بتهزر معايا وبتشتغلني بكلام مش حقيقي على سبيل الضحك.','حركة فنان: بيشد رجلك عشان يوقعك في مقلب خفيف = بيهزر معاك!',0],
+      ['id_17','L1','Idioms','miss the boat','I waited too long to apply for the scholarship and completely _____.',['missed the boat','rocked the boat','sailed through','crossed the bridge'],0,'معناه القطر فاته أو ضيع فرصة ذهبية بسبب التأخير!','حركة فنان: المركب مشي وإنت لسه على الرصيف = الفرصة راحت عليك!',0],
+      ['id_18','L2','Idioms','get out of hand','The argument at the stadium started small, then quickly _____.',['got out of hand','got cold feet','got the green light','got off the hook'],0,'معناه خرج عن السيطرة وبقى صعب تتحكم فيه!','حركة فنان: الموضوع فلت من إيدك (out of hand) = مبقاش تحت السيطرة!',0],
+      ['id_19','L1','Idioms','call it a day',"We have coded for nine hours straight—let's save our work and _____.",['call it a day','call the shots','call it even','call off the dogs'],0,'معناه كفاية شغل لحد كده النهارده، يلا نقفل ونرتاح!','حركة فنان: بتقفل اليوم وتقول خلصنا شغل النهارده = call it a day!',0],
+      ['id_20','L1','Idioms','hang in there','I know the exam week feels exhausting, buddy, just _____!',['hang in there','hang up the boots','throw in the towel','pack your bags'],0,'معناه اصمد ومتستسلمش، هانت! للتشجيع في الأوقات الصعبة.','حركة فنان: متعلق ومكمل رغم التعب = اجمد ومتسيبش إيدك!',0],
+      ['id_21','L3','Idioms','by the book','Our new manager is strict and does everything strictly _____.',['by the book','off the record','out of the blue','under the radar'],0,'معناه بالقانون واللوائح بالحرف الواحد.','حركة فنان: ماشي على كتاب القوانين كلمة بكلمة = by the book!',0],
+      ['id_22','L1','Idioms','in hot water',"You'll be _____ with the coach if you skip practice twice in a row.",['in hot water','on thin ice','in full swing','on the same page'],0,'معناه في ورطة أو مشكلة كبيرة مع حد مسؤول!','حركة فنان: وقعت في مية سخنة بتغلي = في ورطة جامدة!',0],
+      ['id_23','L1','Idioms','see eye to eye','Even though they are brothers, they rarely _____ on politics.',['see eye to eye','turn a blind eye',"catch someone's eye",'keep an eye out'],0,'معناه يتفقوا في الرأي وتكون وجهة نظرهم واحدة.','حركة فنان: عين في عين على نفس المستوى = متفقين تماماً!',0],
+      ['id_24','L1','Idioms','on cloud nine','After receiving her acceptance letter from Cairo University, Dina was _____.',['on cloud nine','under the weather','down in the dumps','out of sorts'],0,'معناه طاير من الفرحة في السما السابعة!','حركة فنان: في العربي السما السابعة، وفي الإنجليزي السحابة التاسعة = on cloud nine!',0],
+      ['id_25','L3','Idioms','kill two birds with one stone','By listening to English podcasts while walking, you _____.',['kill two birds with one stone','count your chickens','let sleeping dogs lie','chase your tail'],0,'تعبير مطابق للعربي بالظبط: تضرب عصفورين بحجر واحد!','حركة فنان: حجر واحد = مجهود واحد بيحقق هدفين في نفس الوقت!',0],
+      // 25 VIP IDIOMS
+      ['id_26','L3','Idioms',"steal someone's thunder",'Right when Youssef announced his promotion, his cousin revealed her engagement and _____.',['stole his thunder','threw in the towel','pulled some strings','kept a low profile'],0,'معناه يسرق الأضواء من حد ويبوظ لحظة تألقه!','حركة فنان: بالمصري سحب البساط من تحت رجليه = stole his thunder!',1],
+      ['id_27','L3','Idioms','cut to the chase','We only have five minutes before the pitch starts, so please _____ and share the numbers.',['cut corners','cut to the chase','cut it out','cut loose'],1,'من أشهر تعبيرات هوليوود! معناه ادخل في الموضوع على طول من غير مقدمات.','حركة فنان: المخرج قص المقدمات ودخل على المطاردة فوراً = هات من الآخر!',1],
+      ['id_28','L3','Idioms','elephant in the room','Everyone praised the visuals, yet nobody addressed the _____—the audio was broken.',['elephant in the room','skeleton in the closet',"wolf in sheep's clothing",'fly on the wall'],0,'معناه مشكلة ضخمة وواضحة قدام الكل بس الناس بتتجاهلها!','حركة فنان: فيل واقف في نص الأوضة والكل ساكت مش عايز يفتح الموضوع!',1],
+      ['id_29','L3','Idioms',"play devil's advocate",'I actually agree with your plan, but let me _____ to test if investors can poke holes in it.',['play it by ear',"play devil's advocate",'call it a night','go the extra mile'],1,'لما تتعمد تاخد الرأي المعارض في نقاش عشان تختبر قوة الفكرة.','حركة فنان: بتعمل دور المعارض الذكي عشان تقوي حجتك قبل المناقشة الحقيقية!',1],
+      ['id_30','L3','Idioms','read between the lines',"Her email sounded polite, but if you _____, she clearly wasn't happy with the delay.",['read between the lines','read the riot act','throw the book at her','take it with a pinch of salt'],0,'بالظبط زي العربي اقرأ ما بين السطور! تفهم المعنى الخفي.','حركة فنان: المعنى الحقيقي مستخبي في المسافة البيضا بين السطور!',1],
+      ['id_31','L2','Idioms','beat around the bush','Stop _____ and tell me honestly whether you liked the presentation.',['beating around the bush','hitting the nail on the head','jumping the gun','breaking the ice'],0,'معناه يلف ويدور ومايدخلش في صلب الموضوع!','حركة فنان: الصياد بيخبط حوالين الشجرة بدل ما يصوب على الهدف = بيلف ويدور!',1],
+      ['id_32','L2','Idioms','sit on the fence',"You can't _____ forever—eventually you have to choose one career path.",['sit on the fence','jump on the bandwagon','burn the candle','walk on eggshells'],0,'معناه ماسك العصاية من النص، محايد ومتردد مش قادر ياخد قرار.','حركة فنان: قاعد على السور لا راضي ينط يمين ولا شمال = متردد!',1],
+      ['id_33','L3','Idioms','burn bridges','Even if you resign from a company, stay professional and never _____.',['burn your bridges','burn the midnight oil','cross your fingers','break the bank'],0,'معناه يقطع علاقاته للأبد ويبوظ أي فرصة للرجوع مستقبلاً.','حركة فنان: حرقت الكوبري وراك = مستحيل تعرف ترجع تاني!',1],
+      ['id_34','L3','Idioms','hit the ground running','Because Hana mastered the codebase beforehand, she _____ on her very first day.',['hit the ground running','missed the mark','jumped the gun','dragged her feet'],0,'معناه بدأ الشغل بحماس وسرعة ومن غير ما يضيع وقت في التأقلم!','حركة فنان: نط من الطيارة وجري أول ما لمس الأرض = بدأ بسرعة الصاروخ!',1],
+      ['id_35','L2','Idioms','jump the gun',"Wait until the contract is actually signed—don't _____ by celebrating early!",['jump the gun','bite the bullet','hit the sack','call it a day'],0,'معناه يستعجل ويتسرع قبل ما تبدأ اللحظة الرسمية.','حركة فنان: العداء جري قبل طلقة البداية = استعجل قبل الأوان!',1],
+      ['id_36','L2','Idioms','the ball is in your court',"I've sent you our final salary offer; now _____.",['the ball is in your court','the shoe is on the other foot','the cat is out of the bag','the coast is clear'],0,'معناه الكورة في ملعبك دلوقتي والقرار عندك إنت!','حركة فنان: في التنس الدور على الخصم يرد = the ball is in your court!',1],
+      ['id_37','L2','Idioms','blessing in disguise','Losing that temporary job pushed me to start my dream business—a _____.',['blessing in disguise','storm in a teacup','pain in the neck','drop in the ocean'],0,'معناه رب ضارة نافعة—حاجة شكلها وحش في الأول بس طلعت خير كبير!','حركة فنان: نعمة متنكرة في شكل مشكلة = blessing in disguise!',1],
+      ['id_38','L3','Idioms','a dime a dozen','Generic motivational quotes online are _____; real actionable advice is rare.',['a dime a dozen','worth their weight in gold','once in a blue moon','second to none'],0,'معناه على قفا مين يشيل—حاجة منتشرة ورخيصة ومفيش فيها تميز!','حركة فنان: 12 واحدة بعشرة سنت = كتير ومكرر ومالوش قيمة نادرة!',1],
+      ['id_39','L3','Idioms','add insult to injury','First my flight got canceled, and to _____, the airline lost my suitcase!',['add insult to injury','break the ice','spill the beans','turn the tables'],0,'معناه يزيد الطين بلة!','حركة فنان: جرح وبتزود عليه إهانة = بتزيد الطين بلة!',1],
+      ['id_40','L2','Idioms','barking up the wrong tree',"If you think Kareem leaked the exam, you're _____—he wasn't even in Cairo.",['barking up the wrong tree','hitting the jackpot','walking on air','riding the wave'],0,'معناه بتتهم الشخص الغلط أو ماشي في السكة الغلط تماماً.','حركة فنان: الكلب بيهوهو تحت الشجرة الغلط والطريدة في حتة تانية!',1],
+      ['id_41','L2','Idioms','best of both worlds','Working remotely from a cozy beach café gives you the _____.',['best of both worlds','tip of the iceberg','end of the tether','luck of the draw'],0,'معناه جمعت بين الحسنيين—واخد مميزات حاجتين حلوين!','حركة فنان: شغل واحتراف وفي نفس الوقت راحة على البحر = أحسن ما في العالمين!',1],
+      ['id_42','L2','Idioms','bite off more than you can chew','Taking five courses while working full-time? Be careful not to _____.',['bite off more than you can chew','put all your eggs in one basket','cry over spilt milk','go with the flow'],0,'معناه تشيل مسؤولية أكبر من طاقتك!','حركة فنان: قطمت لقمة أكبر من بقك فمش عارف تمضغها = التزامات فوق طاقتك!',1],
+      ['id_43','L3','Idioms','cross that bridge when we come to it',"We don't know if the server will crash next year; let's _____.",['cross that bridge when we come to it','burn that bridge behind us','build castles in the air','cry wolf'],0,'معناه ما نسبقش الأحداث، ساعة الجد يحلها الحلال!','حركة فنان: لما نوصل للكوبري نبقى نعديه، ما تقلقش من بكرة دلوقتي!',1],
+      ['id_44','L2','Idioms','cry over spilt milk',"The typo is already printed in the booklet—there's no use _____.",['crying over spilt milk','crying wolf','walking on thin ice','grasping at straws'],0,'معناه البكا على اللبن المسكوب مش هيفيد، ركز في اللي جاي!','حركة فنان: اللي فات مات، مفيش فايدة من البكا على اللبن المسكوب!',1],
+      ['id_45','L3','Idioms','benefit of the doubt',"Maybe the courier got stuck in traffic—let's give him the _____.",['benefit of the doubt','cold shoulder','green light','upper hand'],0,'معناه تحسن الظن بحد وتديله عذر لحد ما يثبت العكس.','حركة فنان: ما دام فيه شك، خلي الشك في مصلحته واحسن الظن!',1],
+      ['id_46','L2','Idioms','go the extra mile','Great teachers always _____ to make sure every student truly understands.',['go the extra mile','take a back seat','drop the ball','cut corners'],0,'معناه يبذل مجهود إضافي فوق المطلوب منه.','حركة فنان: مش بس مشيت المسافة المطلوبة، لأ مشيت ميل زيادة كمان = جدعنة!',1],
+      ['id_47','L2','Idioms','keep your chin up',"One tough match doesn't define your season—_____, champion!",['keep your chin up','keep your head down','keep a straight face','keep an ear out'],0,'معناه ارفع راسك وخليك متفائل رغم أي إحباط!','حركة فنان: دقنك مرفوعة لفوق = ثقة وتفاؤل وعدم استسلام!',1],
+      ['id_48','L3','Idioms','throw in the towel','After four failed prototypes, many quit—but true founders refuse to _____.',['throw in the towel','steal the spotlight','hit the jackpot','make ends meet'],0,'معناه يرفع الراية البيضا ويعلن الاستسلام في نص التحدي!','حركة فنان: في الملاكمة المدرب يرمي الفوطة عشان يوقف الماتش = استسلام!',1],
+      ['id_49','L3','Idioms','weather the storm','Strong Egyptian startups stayed disciplined and managed to _____ during the market dip.',['weather the storm','steal the thunder','jump ship','rock the boat'],0,'معناه يصمد ويعدي الأزمة الصعبة بسلام لحد ما تصفى!','حركة فنان: المركب صمدت وسط العاصفة وعدت البر بأمان!',1],
+      ['id_50','L3','Idioms','silver lining','Staying home for two weeks gave me time to master 100 idioms—every cloud has a _____.',['silver lining','golden ticket','dark shadow','broken wing'],0,'معناه في قلب كل محنة فيه منحة وأمل مضيء!','حركة فنان: السحابة السودا دايماً حواليها إطار فضي بينور = silver lining!',1],
+
+      // 20 FREE PROVERBS
+      ['pv_01','L2','Proverbs','Actions speak louder than words','Stop promising to practice every day and just start—remember, _____.',['actions speak louder than words','curiosity killed the cat',"beggars can't be choosers","two wrongs don't make a right"],0,'المثل معناه الأفعال أبلغ من الأقوال!','حركة فنان: بدل اسمع كلامك أصدقك = Actions speak louder than words!',0],
+      ['pv_02','L1','Proverbs','Practice makes perfect',"Don't worry if your accent sounds stiff at first; _____.",['practice makes perfect','easy come, easy go','silence is golden','time heals all wounds'],0,'معناه الممارسة والتمرين المستمر يوصلك للإتقان!','حركة فنان: التكرار بيعلم الشطار = Practice makes perfect!',0],
+      ['pv_03','L1','Proverbs','Better late than never','You finally started learning English at 30? Awesome—_____!',['better late than never','the early bird catches the worm','look before you leap','no pain, no gain'],0,'معناه أن تأتي متأخراً خير من ألا تأتي أبداً!','حركة فنان: في مصر تأخير ولا قطيعة = Better late than never!',0],
+      ['pv_04','L1','Proverbs','Time flies',"Wait, is the class already over? Wow, _____ when you're having fun!",['time flies','knowledge is power','honesty is the best policy','seeing is believing'],0,'معناه الوقت بيطير بسرعة الصاروخ لما تكون مبسوط!','حركة فنان: الساعة الحلوة بتعدي هوا = Time flies!',0],
+      ['pv_05','L1','Proverbs','Honesty is the best policy','Admit the mistake openly to the client; _____.',['honesty is the best policy','all that glitters is not gold','curiosity killed the cat','easy come, easy go'],0,'معناه الصدق منجاة وأحسن سياسة تكسب بيها ثقة الناس!','حركة فنان: الصدق أقصر طريق للثقة = Honesty is the best policy!',0],
+      ['pv_06','L3','Proverbs',"Where there's a will, there's a way",'Even without expensive tutors, you can master English online—_____.',["where there's a will, there's a way",'out of sight, out of mind','look before you leap','no news is good news'],0,'معناه حيثما توجد الإرادة يوجد الطريق!','حركة فنان: لو عندك عزيمة (will) ربنا بيفتحلك سكة (way)!',0],
+      ['pv_07','L3','Proverbs','Look before you leap','Read every clause in the contract carefully before signing—always _____.',['look before you leap','strike while the iron is hot','fortune favors the bold','easy come, easy go'],0,'معناه بص كويس وفكر قبل ما تنط في أي قرار—في التأني السلامة!','حركة فنان: اتأكد من الأرض قبل ما تنط = احسب خطواتك الأول!',0],
+      ['pv_08','L1','Proverbs','Two heads are better than one',"Let's brainstorm this project together; after all, _____.",['two heads are better than one','too many cooks spoil the broth','silence is golden',"beggars can't be choosers"],0,'معناه عقلين أحسن من عقل واحد في التفكير وحل المشاكل!','حركة فنان: إيد لوحدها متسقفش، اتنين يفكروا أحسن!',0],
+      ['pv_09','L1','Proverbs','The early bird catches the worm','Getting up at 6 AM gives you quiet focus before everyone wakes up—_____.',['the early bird catches the worm','better late than never','good things come to those who wait','slow and steady wins the race'],0,'معناه اللي يصحى بدري ياخد أحسن الفرص—البركة في البكور!','حركة فنان: العصفور اللي بيصحى بدري بياخد الرزق الأول = من سبق لبق!',0],
+      ['pv_10','L1','Proverbs',"Don't judge a book by its cover",'That small café looks simple outside, yet serves the best coffee in Cairo—_____.',["don't judge a book by its cover",'a picture is worth a thousand words','like father, like son','seeing is believing'],0,'معناه ما تحكمش على المظاهر من بره، الجوهر هو الأساس!','حركة فنان: الغلاف البسيط ممكن يخبي جواه كتاب عظيم!',0],
+      ['pv_11','L3','Proverbs',"Rome wasn't built in a day",'Fluency takes months of daily immersion—stay patient because _____.',["Rome wasn't built in a day",'time and tide wait for no man','strike while the iron is hot','variety is the spice of life'],0,'معناه الإنجازات العظيمة بتحتاج وقت وصبر!','حركة فنان: روما متبنتش في يوم واحد = خطوة بخطوة هتوصل!',0],
+      ['pv_12','L1','Proverbs','No pain, no gain','Those tough grammar drills feel challenging now, but remember: _____.',['no pain, no gain','no news is good news','easy come, easy go','silence is golden'],0,'معناه مفيش نجاح ومكسب من غير تعب واجتهاد!','حركة فنان: مفيش حلاوة من غير نار = No pain, no gain!',0],
+      ['pv_13','L1','Proverbs','Easy come, easy go','He spent his whole bonus in one weekend—truly, _____.',['easy come, easy go','penny wise, pound foolish','money talks','time is money'],0,'معناه اللي ييجي بالساهل يروح بالساهل!','حركة فنان: الحاجة اللي بتيجي من غير تعب بتطير بسرعة!',0],
+      ['pv_14','L1','Proverbs','Laughter is the best medicine','After a stressful exam week, comedy with friends helps because _____.',['laughter is the best medicine','ignorance is bliss','time heals all wounds','prevention is better than cure'],0,'معناه الضحك والبهجة أحسن علاج للهم والتعب!','حركة فنان: ساعة لقلبك تفك الضغط وتجدد طاقتك!',0],
+      ['pv_15','L1','Proverbs','Knowledge is power','Reading deeply and asking sharp questions gives you an edge—_____.',['knowledge is power','curiosity killed the cat','silence is golden','seeing is believing'],0,'معناه المعرفة قوة—اللي بيفهم ويتعلم دايماً أقوى!','حركة فنان: العلم سلاح وقوة حقيقية في أي مجال!',0],
+      ['pv_16','L1','Proverbs','Silence is golden','When people are arguing emotionally, sometimes _____.',['silence is golden','actions speak louder than words','the pen is mightier than the sword','truth hurts'],0,'معناه إذا كان الكلام من فضة فالسكوت من ذهب!','حركة فنان: السكوت من ذهب = Silence is golden!',0],
+      ['pv_17','L1','Proverbs','Seeing is believing',"I didn't think the app worked offline until I tested it myself—_____.",['seeing is believing','appearance can be deceptive','love is blind','out of sight, out of mind'],0,'معناه اللي يشوف بعينه يصدق!','حركة فنان: التجربة قدام عينك هي أكبر دليل = Seeing is believing!',0],
+      ['pv_18','L3','Proverbs','Time heals all wounds','Heartbreak hurts terribly today, yet stay strong because _____.',['time heals all wounds','time flies','time is money','better safe than sorry'],0,'معناه الزمن كفيل يداوي كل الجراح ويخفف الوجع مع الأيام!','حركة فنان: مسير الأيام تنسيك وتداوي وجعك = Time heals all wounds!',0],
+      ['pv_19','L3','Proverbs','Better safe than sorry','Pack an umbrella even though the sky looks clear—_____.',['better safe than sorry','better late than never','nothing ventured, nothing gained','fortune favors the bold'],0,'معناه الاحتياط واجب—الوقاية والحرص أحسن من الندم!','حركة فنان: الحرص ولا التخوين = Better safe than sorry!',0],
+      ['pv_20','L1','Proverbs','A friend in need is a friend indeed','When my car broke down at midnight, Yasser drove an hour to help—_____.',['a friend in need is a friend indeed','birds of a feather flock together','familiarity breeds contempt','absence makes the heart grow fonder'],0,'معناه الصاحب وقت الضيق هو الصاحب الجدع الحقيقي!','حركة فنان: في الشدة بيبان الأصيل = الصديق وقت الضيق!',0],
+      // 20 VIP PROVERBS
+      ['pv_21','L2','Proverbs','Every cloud has a silver lining','Missing that flight introduced me to my future business partner—truly, _____.',['every cloud has a silver lining','it never rains but it pours','a rolling stone gathers no moss','all good things come to an end'],0,'معناه كل محنة جواها خير وأمل مخفي، وراء كل عاصفة فرج!','حركة فنان: مفيش ضلمة كاملة، دايماً فيه طرف بينور في السحابة!',1],
+      ['pv_22','L2','Proverbs','Birds of a feather flock together','All the ambitious designers in our college sit at the same table—_____.',['birds of a feather flock together','opposites attract',"don't count your chickens",'like father, like son'],0,'معناه الطيور على أشكالها تقع!','حركة فنان: نفس الطيور بنفس الريش بتطير في سرب واحد!',1],
+      ['pv_23','L2','Proverbs',"Don't put all your eggs in one basket",'Apply to five universities instead of relying on one—_____.',["don't put all your eggs in one basket",'kill two birds with one stone','a stitch in time saves nine',"beggars can't be choosers"],0,'معناه ما تحطش كل بيضك في سلة واحدة—وزع اختياراتك!','حركة فنان: لو السلة وقعت البيض كله هيتكسر! نوع خططك!',1],
+      ['pv_24','L3','Proverbs','Strike while the iron is hot','The client loved your demo today—send the proposal tonight and _____!',['strike while the iron is hot','let sleeping dogs lie','wait for the dust to settle','cross that bridge later'],0,'معناه اطرق الحديد وهو ساخن—استغل الفرصة الذهبية فوراً!','حركة فنان: الحداد يدق الحديد وهو سخن، استغل الحماس دلوقتي!',1],
+      ['pv_25','L2','Proverbs','A picture is worth a thousand words','Show one clear chart instead of reading three pages of stats—_____.',['a picture is worth a thousand words','beauty is in the eye of the beholder','actions speak louder than words','brevity is the soul of wit'],0,'معناه الصورة الواحدة تغني عن ألف كلمة!','حركة فنان: رسمة شيك توصل الفكرة أسرع من صفحة كلام!',1],
+      ['pv_26','L2','Proverbs','Too many cooks spoil the broth','Six people tried editing the same slide at once and ruined it—_____.',['too many cooks spoil the broth','many hands make light work','two heads are better than one','great minds think alike'],0,'معناه المركب اللي فيها ريسين بتغرق!','حركة فنان: لما 10 طباخين يحطوا ملح في نفس الحلة، الشوربة تبوظ!',1],
+      ['pv_27','L2','Proverbs',"Beggars can't be choosers","The free hostel room is tiny, but since we didn't pay a pound, _____.",["beggars can't be choosers",'you get what you pay for','charity begins at home','the grass is always greener'],0,'معناه اللي بياخد حاجة ببلاش ميتشرطش!','حركة فنان: بالمصري ببلاش وكمان بيتشرط؟ = Beggars can’t be choosers!',1],
+      ['pv_28','L3','Proverbs','Necessity is the mother of invention','When power went out, students built a solar study lamp—truly, _____.',['necessity is the mother of invention','practice makes perfect','curiosity killed the cat','fortune favors the bold'],0,'معناه الحاجة أم الاختراع!','حركة فنان: نفس المثل العربي بالظبط: الحاجة أم الاختراع!',1],
+      ['pv_29','L3','Proverbs','Absence makes the heart grow fonder','Moving to another city made them appreciate family dinners even more—_____.',['absence makes the heart grow fonder','out of sight, out of mind','blood is thicker than water','home is where the heart is'],0,'معناه البعد والغياب بيزودوا الشوق والغلاوة في القلب!','حركة فنان: الغياب بيقوي الحب والشوق!',1],
+      ['pv_30','L2','Proverbs','All that glitters is not gold','That flashy investment promised instant millions, yet collapsed—remember, _____.',['all that glitters is not gold','strike while the iron is hot','every dog has its day','nothing succeeds like success'],0,'معناه مش كل حاجة بتلمع تطلع دهب!','حركة فنان: اللمعان بيخدع أحياناً = مش كل اللي بيبرق دهب!',1],
+      ['pv_31','L2','Proverbs','Curiosity killed the cat',"Stop snooping inside your brother's private journal—remember, _____!",['curiosity killed the cat','knowledge is power','fortune favors the bold','honesty is the best policy'],0,'معناه الفضول الزيادة والتدخل فيما لا يعنيك ممكن يجيبلك مشاكل!','حركة فنان: القطة الفضولية حطت مناخيرها في كل حاجة فاتأذت!',1],
+      ['pv_32','L2','Proverbs',"Don't count your chickens before they hatch",'Wait until the prize money hits your account before spending it—_____.',["don't count your chickens before they hatch",'a bird in the hand is worth two in the bush','slow and steady wins the race','haste makes waste'],0,'معناه ما تبيعش السمك وهو في المية!','حركة فنان: البيض لسه مفقسش، استنى الكتاكيت تطلع الأول قبل ما تعدها!',1],
+      ['pv_33','L3','Proverbs','Fortune favors the bold','Speak English out loud even if you feel nervous—_____!',['fortune favors the bold','look before you leap','better safe than sorry','pride comes before a fall'],0,'معناه الحظ والنجاح دايماً بيقفوا مع الجريء الشجاع!','حركة فنان: اللي يخاف مبيكسبش، الجرأة بتفتح أبواب النجاح!',1],
+      ['pv_34','L2','Proverbs','Good things come to those who wait','Keep watering your skills quietly; _____.',['good things come to those who wait','time and tide wait for no man','strike while the iron is hot','early bird catches the worm'],0,'معناه من صبر نال!','حركة فنان: الصبر مفتاح الفرج = Good things come to those who wait!',1],
+      ['pv_35','L3','Proverbs','Hope for the best, prepare for the worst','Back up your files before presenting live: always _____.',['hope for the best, prepare for the worst','easy come, easy go','ignorance is bliss','let bygones be bygones'],0,'معناه اتمنى الخير بس اعمل حسابك دايماً لأصعب احتمال!','حركة فنان: تفاؤل في القلب + خطة احتياطية في الجيب!',1],
+      ['pv_36','L3','Proverbs','It takes two to tango',"Don't blame only one person for the argument—remember, _____.",['it takes two to tango',"two wrongs don't make a right","one swallow doesn't make a summer","it's the last straw"],0,'معناه رقصة التانجو محتاجة اتنين—أي خناقة أو شراكة طرفين مشتركين فيها!','حركة فنان: إيد لوحدها متسقفش في الخلافات أو التعاون!',1],
+      ['pv_37','L3','Proverbs','The pen is mightier than the sword','Clear ideas and persuasive writing outlast force—_____.',['the pen is mightier than the sword','actions speak louder than words','might makes right','silence is golden'],0,'معناه القلم والفكر أقوى من السيف!','حركة فنان: الكلمة الصادقة تغير التاريخ أكتر من السلاح!',1],
+      ['pv_38','L2','Proverbs','Slow and steady wins the race','Studying 20 minutes daily beats cramming all night once a month—_____.',['slow and steady wins the race','haste makes waste','strike while the iron is hot','time flies'],0,'معناه الاستمرارية الهادية بتكسب السباق في الآخر!','حركة فنان: قليل دائم خير من كثير منقطع!',1],
+      ['pv_39','L3','Proverbs',"Two wrongs don't make a right","He insulted you first, yet insulting him back won't fix anything—_____.",["two wrongs don't make a right",'an eye for an eye','two heads are better than one','it takes two to tango'],0,'معناه الغلط مبيتصلحش بغلط زيه!','حركة فنان: غلط + غلط = مصيبة أكبر، مش صح!',1],
+      ['pv_40','L3','Proverbs','You reap what you sow','Every hour you invest in learning today pays off later—_____.',['you reap what you sow','what goes up must come down','easy come, easy go',"beggars can't be choosers"],0,'معناه كما تزرع تحصد!','حركة فنان: اللي بتزرعه بإيدك هو اللي هتحصده في الآخر!',1],
+
+      // 25 FREE PHRASAL VERBS
+      ['pv_v01','L1','Phrasal Verbs','look after','Could you _____ my backpack for a minute while I grab a coffee?',['look up','look after','look into','look out'],1,'الفعل look after معناه يخلي باله من أو يعتني بـ.','حركة فنان: بتمشي ورا (after) الحاجة عشان تحرسها = look after!',0],
+      ['pv_v02','L1','Phrasal Verbs','give up','Learning pronunciation takes patience, so never _____ on yourself.',['give away','give up','give back','give in'],1,'الفعل give up معناه يستسلم أو يبطل محاولة.','حركة فنان: بترفع إيديك لفوق (UP) لما تستسلم، بس أبطالنا عمرهم ما يعملوا give UP!',0],
+      ['pv_v03','L1','Phrasal Verbs','turn down',"Can you please _____ the volume? I'm trying to concentrate on my call.",['turn up','turn off','turn down','turn over'],2,'لما توطي الصوت (أو ترفض عرض)، بتستخدم turn down.','حركة فنان: DOWN = لتحت (وطي الصوت). UP = لفوق (علي). OFF = اقفل خالص!',0],
+      ['pv_v04','L1','Phrasal Verbs','wake up','Set two alarms so you _____ before Fajr tomorrow.',['wake up','stay up','give up','hang up'],0,'معناه يصحى من النوم ويفتح عينه!','حركة فنان: wake up = تفتح عينك وتفوق. get up = تقوم من السرير!',0],
+      ['pv_v05','L1','Phrasal Verbs','find out',"Let's search the official site to _____ what time the museum opens.",['find out','figure on','check out','carry out'],0,'معناه يكتشف معلومة أو يعرف الحقيقة!','حركة فنان: طلعت المعلومة من جوه لبره (out) = عرفت الحقيقة!',0],
+      ['pv_v06','L1','Phrasal Verbs','pick up',"I'll _____ my little sister from school at 2:30 PM.",['pick up','pick out','drop out','put off'],0,'معناه يعدي ياخد حد بالعربية، أو يشيل حاجة، أو يلقط لغة!','حركة فنان: بتعدي تشيل حد في سكتك = pick up. تسيبه = drop off!',0],
+      ['pv_v07','L1','Phrasal Verbs','put on',"It's chilly tonight in Alexandria—_____ your jacket before heading out.",['put on','take off','put out','put away'],0,'معناه يلبس هدوم!','حركة فنان: اللبس على جسمك (ON) = put on. تقلعه = take off!',0],
+      ['pv_v08','L1','Phrasal Verbs','take off','Please _____ your muddy shoes at the front door, and our plane will _____ at noon.',['take off','take on','take over','take up'],0,'take off معناها يقلع الحذاء أو الطيارة تقلع للسما!','حركة فنان: الحاجة بتتشال وتبعد عن الأرض أو الجسم = take off!',0],
+      ['pv_v09','L1','Phrasal Verbs','get along with','Even though they have different hobbies, the roommates _____ really well.',['get along with','get away with','get over','get out of'],0,'معناه يتفاهم وينسجم مع حد وتبقى علاقتهم حلوة!','حركة فنان: ماشيين جنب بعض على طول الطريق (along) في هدوء!',0],
+      ['pv_v10','L3','Phrasal Verbs','look forward to','I really _____ meeting the whole Desert Force team next week!',['look forward to','look down on','look up to','look back at'],0,'معناه متحمس ومستني حاجة حلوة بفارغ الصبر—بيجي بعدها اسم أو verb+ing!','حركة فنان: باصص لقدام ومستني اليوم الحلو: look forward to + ing!',0],
+      ['pv_v11','L1','Phrasal Verbs','run out of','Oh no, we _____ printer ink right before printing the certificates!',['ran out of','ran into','ran over','ran away from'],0,'معناه خلص المخزون بتاعنا ومبقاش عندنا تاني!','حركة فنان: الحبر جري وطلع بره (out of) الحبارة = خلص تماماً!',0],
+      ['pv_v12','L1','Phrasal Verbs','break down','Our bus _____ halfway to Ain Sokhna, so we called a mechanic.',['broke down','broke into','broke out','broke up'],0,'معناه يعطل (عربية/مكنة) أو ينهار نفسياً!','حركة فنان: العربية وقعت على جنبها لتحت (down) = عطلت!',0],
+      ['pv_v13','L1','Phrasal Verbs','check in','Passengers must _____ at the airport counter two hours before departure.',['check in','check out','check up','check off'],0,'معناه يسجل وصوله في فندق أو مطار. عكسها check out!','حركة فنان: داخل الفندق = check IN. طالع وماشي = check OUT!',0],
+      ['pv_v14','L1','Phrasal Verbs','grow up','Where did you _____ before moving to Giza for university?',['grow up','bring up','wake up','make up'],0,'معناه يكبر ويتربى (عن الإنسان من الطفولة للشباب)!','حركة فنان: الإنسان بيكبر لوحده = grow up. الأهل بيربوه = bring up!',0],
+      ['pv_v15','L1','Phrasal Verbs','hang out',"After finals finish, let's _____ at the Nile corniche and celebrate!",['hang out','hang up','hang on','hang back'],0,'معناه يخرج يقعد ويتفسح مع صحابه في جو رايق!','حركة فنان: بالمصري ننزل نقعد مع الشلة ونفرفش = hang out!',0],
+      ['pv_v16','L1','Phrasal Verbs','calm down','Take a deep breath and _____—we can solve this glitch together.',['calm down','slow down','break down','turn down'],0,'معناه اهدى وروق أعصابك!','حركة فنان: بننزل التوتر لتحت (down) لحد ما نهدا = calm down!',0],
+      ['pv_v17','L1','Phrasal Verbs','fill out','Please _____ this registration form with your full name and phone number.',['fill out','cross out','find out','hand out'],0,'معناه يملا استمارة أو أبلكيشن بيانات!','حركة فنان: بتملا الخانات الفاضية في الورقة = fill out!',0],
+      ['pv_v18','L1','Phrasal Verbs','go on','Even when the internet flickered, the teacher told us to _____ presenting.',['go on','go off','go out','go over'],0,'معناه يستمر ويكمل اللي بيعمله!','حركة فنان: الزرار لسه شغال (ON) = كمل ومتوقفش = go on!',0],
+      ['pv_v19','L1','Phrasal Verbs','look up','Whenever you meet a new idiom, _____ its real-life example first.',['look up','look after','look down','look out'],0,'معناه يدور على كلمة أو معلومة في قاموس أو أونلاين!','حركة فنان: بترفع عينك وتدور في المرجع = look up!',0],
+      ['pv_v20','L3','Phrasal Verbs','make up','They argued this morning, but they talked it out and _____ before lunch.',['made up','made out','made over','made off'],0,'معناه يتصالحوا بعد خناقة، أو يألف قصة، أو يعوض امتحان!','حركة فنان: صلحوا العلاقة أو ألفوا قصة جديدة = made up!',0],
+      ['pv_v21','L1','Phrasal Verbs','set up','It only takes two minutes to _____ your new study schedule.',['set up','set off','set back','set down'],0,'معناه يجهز أو ينشئ نظام أو مشروع!','حركة فنان: بترفع الخيمة وتجهزها لفوق (UP) = جاهزة للشغل: set up!',0],
+      ['pv_v22','L1','Phrasal Verbs','show up','Over two hundred students _____ for the free English workshop!',['showed up','showed off','shut up','stood up'],0,'معناه يحضر وييجي للمكان أو الميعاد. أما show off فمعناه يتفشخر!','حركة فنان: بان قدامنا (show up) = حضر الميعاد!',0],
+      ['pv_v23','L1','Phrasal Verbs','take care of','Eat well, sleep early, and _____ your mental focus before exams.',['take care of','take part in','take place','take after'],0,'معناه يهتم بـ أو يتولى مسؤولية حاجة أو شخص.','حركة فنان: بتشيل الهم وتعتني بالحاجة = take care of!',0],
+      ['pv_v24','L3','Phrasal Verbs','work out',"Don't worry about the schedule conflict—everything will _____ fine!",['work out','work up','work on','work off'],0,'معناه يتمرن في الجيم، أو تتحل وتظبط في الآخر، أو يحل مسألة!','حركة فنان: التمرين أو الحل طلع بنتيجة حلوة لبره (out) = work out!',0],
+      ['pv_v25','L1','Phrasal Verbs','watch out',"_____! There's a speeding scooter turning around the corner!",['Watch out','Watch over','Look up','Stand by'],0,'معناه حاسب! خلي بالك! للتحذير الفوري.','حركة فنان: افتح عينك لبره (out) وحاسب قدامك = Watch out!',0],
+      // 25 VIP PHRASAL VERBS
+      ['pv_v26','L2','Phrasal Verbs','come up with','Our startup team had to _____ a creative marketing plan overnight.',['come across','come down with','come up with','come into'],2,'معناه يبتكر فكرة أو حل جديد!','حركة فنان: اللمبة نورت فوق دماغك وطلعت بفكرة = come UP with an idea!',1],
+      ['pv_v27','L2','Phrasal Verbs','put up with',"I can't _____ this constant construction noise outside my window anymore!",['put off','put out','put up with','put away'],2,'معناه يتحمل أو يصبر على حاجة مزعجة!','حركة فنان: 3 كلمات = صبر طويل! Put UP WITH = تستحمل دوشة غصب عنك!',1],
+      ['pv_v28','L2','Phrasal Verbs','carry out','Scientists will _____ three more experiments before publishing the study.',['carry out','carry on','carry away','carry off'],0,'معناه ينفذ خطة أو بحث أو تجربة للنهاية!','حركة فنان: شال المهمة وطلع بيها منفذة على أرض الواقع = carry out!',1],
+      ['pv_v29','L2','Phrasal Verbs','bring up',"Wait—please don't _____ that awkward mistake during dinner!",['bring up','bring about','bring down','bring back'],0,'معناه يفتح موضوع في الكلام، أو يربي طفل!','حركة فنان: بتجيب سيرة موضوع من تحت وتطلعه فوق الترابيزة (up)!',1],
+      ['pv_v30','L2','Phrasal Verbs','call off','Heavy sandstorms forced the organizers to _____ the outdoor concert.',['call off','call on','call out','call for'],0,'معناه يلغي حدث نهائياً (= cancel)!','حركة فنان: قفل النور على الحفلة (OFF) = اتلغت! أما put off = اتأجلت!',1],
+      ['pv_v31','L2','Phrasal Verbs','drop by',"Feel free to _____ our studio whenever you're around Maadi!",['drop by','drop out','drop off','drop back'],0,'معناه يزور حد زيارة سريعة على الماشي!','حركة فنان: تعدي علينا وإنت ماشي جنبنا (by) = drop by!',1],
+      ['pv_v32','L2','Phrasal Verbs','figure out',"It took me twenty minutes to _____ why the code wouldn't compile.",['figure out','fill out','find on','fade out'],0,'معناه يفهم سر مشكلة معقدة ويحلها بالتفكير!','حركة فنان: فكيت الشفرة ووصلت للحل في دماغك = figure out!',1],
+      ['pv_v33','L2','Phrasal Verbs','get over','It takes a few days to _____ jet lag after a long international flight.',['get over','get through','get by','get into'],0,'معناه يتعافى ويتخطى مرض أو صدمة أو زعل!','حركة فنان: نطيت من فوق العقبة (over) وعديتها خلاص = get over!',1],
+      ['pv_v34','L2','Phrasal Verbs','give in','After begging for an hour, Dad finally _____ and let us adopt the kitten.',['gave in','gave up','gave out','gave off'],0,'معناه يرضخ ويوافق بعد مقاومة وضغط من حد تاني!','حركة فنان: دخلت جوه (in) ووافقت على طلبهم! عكس give up = يبطل محاولة!',1],
+      ['pv_v35','L2','Phrasal Verbs','keep up with','Technology moves fast, so developers read daily to _____ new tools.',['keep up with','keep out of','keep away from','keep on'],0,'معناه يواكب ويفضل ماشي بنفس سرعة التطور!','حركة فنان: محافظ على خطوتك معاه ومش متأخر عنه = keep up with!',1],
+      ['pv_v36','L2','Phrasal Verbs','let down',"I promised to help you revise, and I won't _____ you _____.",['let / down','let / in','let / off','let / out'],0,'معناه يخذل حد ويخلف وعده معاه!','حركة فنان: وقعت عشمه لتحت (down) = خذلته!',1],
+      ['pv_v37','L2','Phrasal Verbs','look into','Customer support promised to _____ the delayed delivery immediately.',['look into','look up to','look down on','look over'],0,'معناه يحقق ويفحص مشكلة بعمق (= investigate)!','حركة فنان: بتبص جوه (into) التفاصيل بالعدسة المكبرة = بتحقق!',1],
+      ['pv_v38','L3','Phrasal Verbs','pass out',"Remember to drink water in the heat so you don't _____!",['pass out','pass away','pass on','pass over'],0,'معناه يفقد الوعي ويغمى عليه!','حركة فنان: الوعي طلع بره (out) = أغمى عليه! أما pass away = توفي!',1],
+      ['pv_v39','L2','Phrasal Verbs','put off','Stop _____ your revision until the night before the exam!',['putting off','putting on','putting up','putting away'],0,'معناه يؤجل (= postpone)!','حركة فنان: زقيت المعاد لبعيد (off) = أجلته! أما call off = لغيته خالص!',1],
+      ['pv_v40','L2','Phrasal Verbs','run into','Guess who I _____ at the book fair today—our high school English teacher!',['ran into','ran out of','ran over','ran down'],0,'معناه يقابل حد بالصدفة البحتة!','حركة فنان: خبطت في صاحبك في الشارع بالصدفة = ran into!',1],
+      ['pv_v41','L2','Phrasal Verbs','stand out','Her sharp storytelling made her portfolio _____ from hundreds of applicants.',['stand out','stand by','stand for','stand down'],0,'معناه يتميز ويلفت الانتباه وسط الزحمة!','حركة فنان: واقف بره الصف (out) ومش شبه الباقيين = متميز وباين!',1],
+      ['pv_v42','L3','Phrasal Verbs','take over','When the founder retired, his eldest daughter _____ the whole company.',['took over','took up','took after','took back'],0,'معناه يتولى القيادة والسيطرة بدل حد تاني!','حركة فنان: أخد الدفة من فوق (over) = استلم الإدارة!',1],
+      ['pv_v43','L3','Phrasal Verbs','turn out','The stranger we met on the train _____ to be our new professor!',['turned out','turned up','turned in','turned over'],0,'معناه طلع في النهاية / اتضح أن!','حركة فنان: الدنيا لفت وطلعت النتيجة في الآخر (out) = اتضح إن!',1],
+      ['pv_v44','L2','Phrasal Verbs','wear out','Running two marathons in one month will _____ your knees and your shoes.',['wear out','wear off','wear on','work out'],0,'معناه يتهلك أو يتعب جداً، أو يدوب من الاستخدام!','حركة فنان: الطاقة اتهلكت وخلصت بره (out) = تعبان هلكان!',1],
+      ['pv_v45','L2','Phrasal Verbs','back up','Always _____ your important study files to the cloud before formatting.',['back up','back down','back out','back off'],0,'معناه يعمل نسخة احتياطية أو يدعم شخص!','حركة فنان: سندك من الضهر (back) = دعم أو نسخة احتياطية!',1],
+      ['pv_v46','L3','Phrasal Verbs','break into','Hackers tried to _____ the bank database, yet the firewall blocked them.',['break into','break out of','break off','break through'],0,'معناه يقتحم مكان أو سيستم بالقوة!','حركة فنان: كسر الباب ودخل جوه (into) بالقوة = اقتحام!',1],
+      ['pv_v47','L2','Phrasal Verbs','catch up with',"I missed two lectures, so I'm staying late to _____ the rest of the class.",['catch up with','catch on','catch out','keep away from'],0,'معناه يلحق باللي فاته ويحصل زمايله!','حركة فنان: بتجري عشان تلحق وتوصل لنفس الخط = catch up with!',1],
+      ['pv_v48','L2','Phrasal Verbs','cut down on','My doctor advised me to _____ sugar and late-night espresso.',['cut down on','cut off','cut out','cut in'],0,'معناه يقلل من استهلاك حاجة!','حركة فنان: بتقص الكمية لتحت (down) = بتقلل السكر أو الكافيين!',1],
+      ['pv_v49','L3','Phrasal Verbs','get away with','Nobody should _____ cheating in a fair competition.',['get away with','get along with','get down to','get rid of'],0,'معناه يفلت من العقاب بعد عمل غلط!','حركة فنان: هرب وبَعَد (away) ومعاه الغلطة من غير حساب!',1],
+      ['pv_v50','L3','Phrasal Verbs','put aside',"Let's _____ our minor disagreements and finish the mission as one team.",['put aside','put across','put down','put forward'],0,'معناه يركن الخلافات على جنب أو يحوش فلوس!','حركة فنان: ركنت الحاجة على جنب (aside) عشان تركز في الأهم!',1],
+
+      // 10 FREE COLLOCATIONS & CINEMATIC SLANG
+      ['cc_01','L1','Collocations','make a mistake',"Every beginner _____ a few mistakes at first—that's how fluency grows!",['does','makes','takes','puts'],1,'الغلطة في الإنجليزي بتاخد make: make a mistake.','حركة فنان: النتائج الجديدة تاخد make. الروتين والشغل ياخدوا do!',0],
+      ['cc_02','L1','Collocations','do a favor','Hey Omar, could you _____ me a quick favor and send the notes?',['make','do','give','bring'],1,'كلمة favor بتيجي دايماً مع do: do me a favor.','حركة فنان: الخدمة اللي بتعملها لحد ده مجهود = DO!',0],
+      ['cc_03','L2','Collocations','strong coffee / heavy rain','I need a cup of _____ coffee before driving through this _____ rain.',['heavy / strong','strong / heavy','big / powerful','hard / thick'],1,'القهوة strong coffee، والمطر والزحمة heavy rain / heavy traffic!','حركة فنان: القهوة والرياح = STRONG. المطر والزحمة = HEAVY!',0],
+      ['cc_04','L3','Collocations','reliant on','Modern remote teams are deeply reliant _____ fast cloud collaboration tools.',['with','on','to','for'],1,'عيلة الاعتماد كلها (rely, reliant, depend) بتاخد on!','حركة فنان: معتمد على = واقف على أرض ثابتة = ON!',0],
+      ['cc_05','L2','Collocations','make up your mind','The train leaves in ten minutes! You need to _____ and pick a seat.',['make up your mind','do up your mind','take up your mind','keep up your mind'],0,'معناه تاخد قرار نهائي وتحسم أمرك!','حركة فنان: تصنع قرارك = MAKE up your mind!',0],
+      ['cc_06','L1','Collocations','take a risk',"Entrepreneurs aren't afraid to _____ when they spot a real opportunity.",['take a risk','make a risk','do a risk','give a risk'],0,'في الإنجليزي بنقول take a risk (يخاطر)!','حركة فنان: المخاطرة والصور والفرص بتاخد TAKE!',0],
+      ['cc_07','L1','Collocations','pay attention','_____ close attention to prepositions—they completely change a phrasal verb!',['Pay','Make','Do','Spend'],0,'الانتباه بياخد pay attention!','حركة فنان: ركز وادفع انتباهك = PAY attention!',0],
+      ['cc_08','L1','Collocations','catch a cold',"Wear a scarf tonight so you don't _____ in the desert breeze.",['catch a cold','take a cold','make a cold','hold a cold'],0,'الإصابة بالبرد اسمها catch a cold!','حركة فنان: زي ما بنقول لقطت دور برد، الإنجليزي catch a cold!',0],
+      ['cc_09','L3','Cinematic & Slang','binge-watch','The whole group stayed up to _____ the entire thriller season in one night.',['binge-watch','window-shop','daydream','shadowbox'],0,'معناه تتفرج على حلقات مسلسل كاملة ورا بعض في قعدة واحدة!','حركة فنان: قعدة النهم قدام الشاشة حلقة ورا حلقة = binge-watch!',0],
+      ['cc_10','L3','Cinematic & Slang','plot twist','Nobody saw that ending coming—what an unforgettable _____!',['plot twist','sound bite','flash mob','rough draft'],0,'معناه قلابة درامية مفاجئة تغير مسار القصة!','حركة فنان: القصة اتقلبت 180 درجة فجأة = plot twist!',0],
+      // 10 VIP COLLOCATIONS & CINEMATIC SLANG
+      ['cc_11','L3','Cinematic & Slang','no-brainer','Getting a full scholarship with free mentorship? Accepting that offer is an absolute _____!',['long shot','no-brainer','red herring','close call'],1,'كلمة slang شيك معناها قرار بديهي مش محتاج تفكير!','حركة فنان: من كتر ما القرار واضح مش محتاج تشغل دماغك = no-brainer!',1],
+      ['cc_12','L3','Cinematic & Slang','dodge a bullet','Five minutes after we left the café, the ceiling pipe burst—we really _____!',['dodged a bullet','bit the bullet','pulled the trigger','jumped the gun'],0,'معناه فلتت من مصيبة على شعرة!','حركة فنان: زي مشهد ماتريكس وهو بيفلت من الرصاصة = dodged a bullet!',1],
+      ['cc_13','L3','Cinematic & Slang','cliffhanger','The episode ended right before opening the secret vault—such a cruel _____!',['cliffhanger','icebreaker','blockbuster','voiceover'],0,'معناه نهاية مشوقة تسيب المشاهد متعلق على أعصابه!','حركة فنان: البطل متعلق على حافة الجبل والحلقة خلصت = cliffhanger!',1],
+      ['cc_14','L3','Cinematic & Slang','cold feet','Right before going live on TV, the guest got _____ and nearly backed out.',['cold feet','warm hands','hot water','heavy eyes'],0,'معناه اتوتر وخاف وتراجع في آخر لحظة!','حركة فنان: رجليه تلجت من الخوف فمش قادر يخطي قدام الكاميرا = cold feet!',1],
+      ['cc_15','L3','Cinematic & Slang','game changer','Adding instant Egyptian Arabic pro-tips to every idiom was a total _____.',['game changer','red flag','wild goose chase','broken record'],0,'معناه نقطة تحول ثورية تقلب الموازين!','حركة فنان: غيرت قواعد اللعبة ورفعت المستوى للسما = game changer!',1],
+      ['cc_16','L3','Cinematic & Slang','showstopper','Her final keynote speech was an absolute _____—the whole hall gave a standing ovation!',['showstopper','spoilers','understudy','sidekick'],0,'معناه أداء خطف الأنفاس وأبهر الكل!','حركة فنان: العرض كان مبهر لدرجة وقف القاعة كلها تصقيف = showstopper!',1],
+      ['cc_17','L3','Cinematic & Slang','break the fourth wall','In that comedy scene, the hero looks directly at the camera to _____.',['break the fourth wall','hit the ceiling','paint the town red','steal the show'],0,'مصطلح سينمائي معناه الممثل يكسر الحاجز ويكلم الجمهور مباشرة!','حركة فنان: المسرح 3 حيطان والرابعة هي الشاشة؛ لما يكلمك كسر الحيط الرابع!',1],
+      ['cc_18','L3','Collocations','keep a promise',"True leaders don't just make bold promises—they always _____.",['keep their promises','do their promises','hold their promises','take their promises'],0,'الوعد بياخد keep a promise (يوفي بوعده)!','حركة فنان: توفي بوعدك = KEEP a promise. تخلف وعدك = BREAK a promise!',1],
+      ['cc_19','L3','Collocations','draw a conclusion','Look at all the evidence carefully before you _____.',['draw a conclusion','paint a conclusion','do a conclusion','write a conclusion'],0,'الاستنتاج بياخد الفعل draw أو reach: draw a conclusion!','حركة فنان: بترسم الخيوط وتوصل لاستنتاج = DRAW a conclusion!',1],
+      ['cc_20','L3','Collocations','meet a deadline','Our engineering squad worked smoothly together to _____ ahead of launch.',['meet the deadline','see the deadline','touch the deadline','catch the deadline'],0,'تلتزم بموعد التسليم اسمها meet a deadline!','حركة فنان: تقابل ميعاد التسليم في وقته المظبوط = MEET the deadline!',1]
+    ];
+
+    const QUESTIONS = RAW_Q.map(([id, level, cat, tag, prompt, options, ans, ar, tip, vip]) => ({
+      id, level, cat, tag, prompt, options, ans, ar, tip,
+      xp: level === 'L1' ? 25 : level === 'L2' ? 35 : 45,
+      vip: Boolean(vip)
+    }));
+
+    const STORAGE_KEY = 'marvel_arena_cefr_v2';
+    let state = loadState();
+    let ui = { tab: 'arena', selectedLevel: 'L1', selectedCat: 'All', codexCat: 'All', codexQuery: '', session: null, summary: null };
+
+    // Auto-activate if opened from a WhatsApp B2B link like ?code=Desert_Force
+    const urlCode = new URLSearchParams(window.location.search).get('code');
+    if (urlCode && urlCode.trim().toLowerCase() === ACTIVATION_CODE.toLowerCase()) {
+      state.vip = true;
+      saveState();
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return { xp: 0, high: { L1: 0, L2: 0, L3: 0 }, streak: 0, bestStreak: 0, theme: 'desert_force', vip: false, vault: [], ...JSON.parse(raw) };
+      } catch {}
+      return { xp: 0, high: { L1: 0, L2: 0, L3: 0 }, streak: 0, bestStreak: 0, theme: 'desert_force', vip: false, vault: [] };
+    }
+    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    function applyTheme(themeId) {
+      const t = THEMES.find(x => x.id === themeId) || THEMES[0];
+      const r = document.documentElement.style;
+      r.setProperty('--bg', t.bg); r.setProperty('--surface', t.surface); r.setProperty('--elevated', t.elevated);
+      r.setProperty('--border', t.border); r.setProperty('--primary', t.primary); r.setProperty('--on-primary', t.onPrimary);
+      r.setProperty('--secondary', t.secondary); r.setProperty('--on-secondary', t.onSecondary); r.setProperty('--tertiary', t.tertiary);
+      r.setProperty('--text', t.text); r.setProperty('--muted', t.muted);
+      state.theme = t.id; saveState();
+    }
+    function currentRank() { return [...RANKS].reverse().find(r => state.xp >= r.minXp) || RANKS[0]; }
+    function waUrl(msg) { return `https://wa.me/${WHATSAPP_B2B}?text=${encodeURIComponent(msg)}`; }
+    function accessibleQuestions() { return state.vip ? QUESTIONS : QUESTIONS.filter(q => !q.vip); }
+    function missionPool(levelId = ui.selectedLevel, cat = ui.selectedCat) {
+      const open = accessibleQuestions();
+      const exact = open.filter(q => q.level === levelId && (cat === 'All' || q.cat === cat));
+      if (exact.length) return exact;
+      if (cat !== 'All') {
+        const byCat = open.filter(q => q.cat === cat);
+        if (byCat.length) return byCat;
+      }
+      return open.filter(q => q.level === levelId);
+    }
+
+    function setTab(tab) { ui.tab = tab; ui.session = null; ui.summary = null; render(); }
+    function selectLevel(id) { ui.selectedLevel = id; render(); }
+    function selectCat(cat) { ui.selectedCat = cat; render(); }
+
+    function startMission(levelId = ui.selectedLevel, vaultOnly = false) {
+      const pool = vaultOnly ? QUESTIONS.filter(q => state.vault.includes(q.id)) : missionPool(levelId, ui.selectedCat);
+      if (!pool.length) return;
+      const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 10);
+      ui.tab = 'arena'; ui.summary = null;
+      ui.session = { levelId, vaultOnly, questions: shuffled, idx: 0, selected: null, revealed: false, score: 0, liveStreak: state.streak, maxStreak: 0, records: [] };
+      render();
+    }
+
+    function answerOption(optIdx) {
+      const s = ui.session;
+      if (!s || s.revealed) return;
+      const q = s.questions[s.idx];
+      const ok = optIdx === q.ans;
+      s.selected = optIdx; s.revealed = true;
+      s.liveStreak = ok ? s.liveStreak + 1 : 0;
+      s.maxStreak = Math.max(s.maxStreak, s.liveStreak);
+      const mult = s.liveStreak >= 6 ? 4 : s.liveStreak >= 4 ? 3 : s.liveStreak >= 2 ? 2 : 1;
+      const gained = ok ? q.xp * mult : 0;
+      s.score += gained;
+      s.records.push({ q, ok, gained });
+      if (!ok && !state.vault.includes(q.id)) state.vault.push(q.id);
+      if (ok) state.vault = state.vault.filter(id => id !== q.id);
+      render();
+    }
+
+    function nextQuestion() {
+      const s = ui.session;
+      if (!s || !s.revealed) return;
+      if (s.idx + 1 < s.questions.length) { s.idx++; s.selected = null; s.revealed = false; render(); return; }
+      state.xp += s.score;
+      state.streak = s.liveStreak;
+      state.bestStreak = Math.max(state.bestStreak, s.maxStreak, state.streak);
+      if (!s.vaultOnly && s.score > (state.high[s.levelId] || 0)) state.high[s.levelId] = s.score;
+      saveState();
+      ui.summary = { levelId: s.levelId, score: s.score, correct: s.records.filter(r => r.ok).length, total: s.records.length, maxStreak: s.maxStreak, missed: s.records.filter(r => !r.ok).map(r => r.q) };
+      ui.session = null;
+      render();
+    }
+
+    function toggleThemeModal(open) {
+      document.getElementById('theme-modal').classList.toggle('hidden', !open);
+      if (open) renderThemeGrid();
+    }
+    function renderThemeGrid() {
+      document.getElementById('theme-grid').innerHTML = THEMES.map(t => `
+        <button onclick="applyTheme('${t.id}'); renderThemeGrid(); render();"
+          class="p-3 rounded-2xl border text-left transition ${state.theme === t.id ? 'ring-2' : ''}"
+          style="background:${t.surface}; border-color:${state.theme === t.id ? t.primary : t.border}; color:${t.text};">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex gap-1.5"><span class="w-3.5 h-3.5 rounded-full" style="background:${t.primary}"></span><span class="w-3.5 h-3.5 rounded-full" style="background:${t.secondary}"></span><span class="w-3.5 h-3.5 rounded-full" style="background:${t.tertiary}"></span></div>
+            <span class="text-[10px] font-bold" style="color:${t.primary}">${state.theme === t.id ? 'ACTIVE' : 'SELECT'}</span>
+          </div>
+          <div class="text-sm font-bold truncate">${t.name}</div>
+          <div class="font-arabic text-xs" style="color:${t.secondary}">${t.ar}</div>
+        </button>
+      `).join('');
+    }
+
+    function toggleVipModal(open) {
+      document.getElementById('vip-error').classList.add('hidden');
+      document.getElementById('wa-b2b-link').href = waUrl('أهلاً فريق Desert Force B2B 👋\nأنا بستخدم تطبيق Marvel in English (50% Free) وعايز أفعل الـ 50% الباقية والحصول على كود التفعيل الكامل.');
+      document.getElementById('vip-modal').classList.toggle('hidden', !open);
+    }
+    function activateVipCode() {
+      const code = document.getElementById('vip-input').value.trim();
+      if (code.toLowerCase() === ACTIVATION_CODE.toLowerCase()) {
+        state.vip = true; saveState(); toggleVipModal(false); render();
+      } else {
+        const err = document.getElementById('vip-error');
+        err.textContent = 'Invalid code. Check your code or activate via WhatsApp B2B (+201126542477).';
+        err.classList.remove('hidden');
+      }
+    }
+    function markMastered(id) { state.vault = state.vault.filter(x => x !== id); saveState(); render(); }
+
+    function render() {
+      const root = document.getElementById('app');
+      const rank = currentRank();
+      const openCount = accessibleQuestions().length;
+      const totalCount = QUESTIONS.length;
+      const badge = document.getElementById('vault-badge');
+      badge.textContent = state.vault.length;
+      badge.classList.toggle('hidden', state.vault.length === 0);
+      document.getElementById('bottom-nav').classList.toggle('hidden', Boolean(ui.session));
+      ['arena', 'codex', 'vault', 'ranks'].forEach(t => {
+        document.getElementById('nav-' + t).style.color = ui.tab === t ? 'var(--primary)' : 'var(--muted)';
+      });
+
+      if (ui.session) {
+        const s = ui.session, q = s.questions[s.idx];
+        const mult = s.liveStreak >= 6 ? 4 : s.liveStreak >= 4 ? 3 : s.liveStreak >= 2 ? 2 : 1;
+        const pct = Math.round(((s.revealed ? s.idx + 1 : s.idx) / s.questions.length) * 100);
+        const rec = s.records[s.idx];
+        root.innerHTML = `
+          <div class="space-y-4 animate-pop">
+            <div class="flex items-center justify-between">
+              <button onclick="setTab('arena')" class="w-10 h-10 rounded-full border theme-elevated font-bold">✕</button>
+              <div class="text-center">
+                <div class="text-[11px] font-bold uppercase theme-primary-text">${s.vaultOnly ? 'VAULT DRILL' : s.levelId}</div>
+                <div class="text-sm font-bold">Challenge ${s.idx + 1}/${s.questions.length} • ${s.score} XP</div>
+              </div>
+              <div class="px-3 py-1.5 rounded-full border theme-secondary-badge text-xs font-bold">🔥 ${s.liveStreak} • ${mult}x</div>
+            </div>
+            <div class="w-full h-2.5 rounded-full theme-elevated border overflow-hidden">
+              <div class="h-full transition-all duration-300" style="width:${pct}%; background: linear-gradient(90deg, var(--primary), var(--tertiary), var(--secondary));"></div>
+            </div>
+            <div class="p-5 rounded-3xl border theme-surface space-y-3">
+              <div class="flex justify-between items-center text-xs">
+                <span class="px-2.5 py-1 rounded-full theme-elevated theme-primary-text font-bold">${q.cat}</span>
+                <span class="theme-secondary-text font-bold">+${q.xp * mult} XP</span>
+              </div>
+              <p class="text-lg font-bold leading-relaxed">${q.prompt}</p>
+            </div>
+            <div class="space-y-2.5">
+              ${q.options.map((opt, i) => {
+                let style = '';
+                if (s.revealed) {
+                  if (i === q.ans) style = 'border-color: var(--tertiary); background: color-mix(in srgb, var(--tertiary) 20%, var(--surface));';
+                  else if (i === s.selected) style = 'border-color: #ef4444; background: rgba(239,68,68,0.18);';
+                }
+                return `<button onclick="answerOption(${i})" ${s.revealed ? 'disabled' : ''} style="${style}"
+                  class="w-full p-4 rounded-2xl border theme-elevated flex items-center gap-3 text-left font-medium transition active:scale-[0.99]">
+                  <span class="w-8 h-8 rounded-full border theme-surface flex items-center justify-center text-xs font-bold">${String.fromCharCode(65 + i)}</span>
+                  <span class="flex-1">${opt}</span>
+                </button>`;
+              }).join('')}
+            </div>
+            ${s.revealed ? `
+              <div class="p-4 rounded-2xl border theme-surface space-y-3 animate-pop" style="border-color:${rec.ok ? 'var(--tertiary)' : '#ef4444'}">
+                <div class="flex justify-between items-center font-arabic font-bold text-sm">
+                  <span>${rec.ok ? 'عاش يا بطل! إجابة في الجون' : 'خلي بالك المرة الجاية!'}</span>
+                  ${rec.ok ? `<span class="theme-tertiary-text">+${rec.gained} XP</span>` : ''}
+                </div>
+                <p class="font-arabic text-sm leading-relaxed">${q.ar}</p>
+                <div class="p-3 rounded-xl border theme-secondary-badge font-arabic text-xs leading-relaxed">💡 ${q.tip}</div>
+                <button onclick="nextQuestion()" class="w-full py-3.5 rounded-2xl theme-primary-btn font-bold">
+                  ${s.idx + 1 >= s.questions.length ? 'Finish & View Report →' : 'Next Challenge →'}
+                </button>
+              </div>
+            ` : ''}
+          </div>`;
+        return;
+      }
+
+      if (ui.summary) {
+        const m = ui.summary, acc = Math.round((m.correct / m.total) * 100);
+        const shareText = encodeURIComponent(`🔥 Marvel in English (${m.levelId}) — Score: ${m.score} XP (${acc}% accuracy) | Rank: ${rank.title}`);
+        const b2bHref = waUrl(`أهلاً فريق Marvel in English! 👋\nخلصت جولة (${m.levelId}) بنتيجة ${m.correct}/${m.total} (${acc}%) - الرتبة: ${rank.title}.\nحابب أتدرب أكتر أو أستفسر عن التفعيل الكامل.`);
+        root.innerHTML = `
+          <div class="space-y-4 animate-pop">
+            <div class="p-5 rounded-3xl border theme-surface space-y-3">
+              <div class="text-xs font-bold uppercase theme-primary-text">Mission Report</div>
+              <h2 class="text-2xl font-bold">${m.levelId} • ${acc}% Accuracy</h2>
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="p-3 rounded-2xl theme-elevated"><div class="font-bold theme-primary-text">+${m.score} XP</div><div class="text-[11px] opacity-70">Score</div></div>
+                <div class="p-3 rounded-2xl theme-elevated"><div class="font-bold theme-tertiary-text">${m.correct}/${m.total}</div><div class="text-[11px] opacity-70">Correct</div></div>
+                <div class="p-3 rounded-2xl theme-elevated"><div class="font-bold theme-secondary-text">${m.maxStreak}x</div><div class="text-[11px] opacity-70">Max Fire</div></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <a href="https://wa.me/?text=${shareText}" target="_blank" class="py-3 rounded-2xl text-center font-bold text-xs border theme-secondary-badge">Share Victory</a>
+              <a href="${b2bHref}" target="_blank" class="py-3 rounded-2xl text-center font-bold text-xs border theme-tertiary-text border-current">WhatsApp B2B</a>
+            </div>
+            ${m.missed.map(q => `
+              <div class="p-4 rounded-2xl border theme-surface space-y-2">
+                <div class="font-bold text-sm">${q.prompt}</div>
+                <div class="text-xs font-bold theme-tertiary-text">Answer: ${q.options[q.ans]}</div>
+                <p class="font-arabic text-sm">${q.ar}</p>
+              </div>`).join('')}
+            <div class="flex gap-2">
+              <button onclick="setTab('arena')" class="flex-1 py-3.5 rounded-2xl border theme-elevated font-bold">Arena Hub</button>
+              <button onclick="startMission('${m.levelId}')" class="flex-1 py-3.5 rounded-2xl theme-primary-btn font-bold">Play Again</button>
+            </div>
+          </div>`;
+        return;
+      }
+
+      if (ui.tab === 'codex') {
+        const qStr = ui.codexQuery.trim().toLowerCase();
+        const items = QUESTIONS.filter(q =>
+          (ui.codexCat === 'All' || q.cat === ui.codexCat) &&
+          (!qStr || q.tag.toLowerCase().includes(qStr) || q.prompt.toLowerCase().includes(qStr) || q.ar.toLowerCase().includes(qStr))
+        );
+        root.innerHTML = `
+          <div class="space-y-3.5 animate-pop">
+            <div>
+              <div class="text-xs font-bold theme-primary-text uppercase">Full Phrasebook &amp; Codex</div>
+              <h2 class="text-2xl font-bold">Idioms, Proverbs &amp; Phrasal Verbs</h2>
+              <p class="text-xs opacity-75">${state.vip ? `Full 100% Unlocked (${totalCount}/${totalCount})` : `50% Free Edition (${openCount}/${totalCount} Open) • Unlock 100% with code or WhatsApp B2B`}</p>
+            </div>
+            ${!state.vip ? `<button onclick="toggleVipModal(true)" class="w-full py-3 rounded-2xl font-bold text-sm border theme-secondary-badge">🔓 Unlock Remaining 50% (${totalCount} Full Bank)</button>` : ''}
+            <input type="text" value="${ui.codexQuery.replace(/"/g, '&quot;')}" oninput="ui.codexQuery=this.value; render();" placeholder="Search idioms, proverbs, phrasal verbs..." class="w-full px-4 py-3 rounded-2xl border theme-surface text-sm outline-none" />
+            <div class="flex gap-1.5 overflow-x-auto pb-1">
+              ${CATEGORIES.map(c => `<button onclick="ui.codexCat='${c}'; render();" class="px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${ui.codexCat === c ? 'theme-primary-btn border-transparent' : 'theme-elevated'}">${c}</button>`).join('')}
+            </div>
+            <div class="space-y-2.5">
+              ${items.map(q => {
+                const locked = q.vip && !state.vip;
+                return `
+                  <div ${locked ? 'onclick="toggleVipModal(true)"' : ''} class="p-4 rounded-2xl border theme-surface space-y-2 ${locked ? 'cursor-pointer opacity-80' : ''}">
+                    <div class="flex justify-between items-center text-[11px] font-bold">
+                      <span class="theme-primary-text">${q.cat} • ${q.level}</span>
+                      <span class="px-2 py-0.5 rounded-full ${locked ? 'theme-secondary-badge border' : 'theme-tertiary-text'}">${locked ? '🔒 VIP' : 'FREE'}</span>
+                    </div>
+                    <div class="font-bold text-base">${q.tag}</div>
+                    ${locked
+                      ? `<p class="text-xs opacity-75">Locked in 50% Free Edition. Tap to activate 100% via code or WhatsApp B2B (+201126542477).</p>`
+                      : `<p class="text-xs opacity-85">${q.prompt.replace('_____', '[' + q.options[q.ans] + ']')}</p>
+                         <p class="font-arabic text-sm">${q.ar}</p>
+                         <div class="p-2.5 rounded-xl border theme-secondary-badge font-arabic text-xs">💡 ${q.tip}</div>`}
+                  </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+        return;
+      }
+
+      if (ui.tab === 'vault') {
+        const vq = QUESTIONS.filter(q => state.vault.includes(q.id));
+        root.innerHTML = `
+          <div class="space-y-4 animate-pop">
+            <div><div class="text-xs font-bold theme-secondary-text uppercase">Review Vault</div><h2 class="text-2xl font-bold">Missed Questions Archive</h2></div>
+            ${vq.length ? `<button onclick="startMission('L1', true)" class="w-full py-3.5 rounded-2xl font-bold border theme-secondary-badge">Drill ${vq.length} Vault Challenges</button>` : ''}
+            ${vq.length ? vq.map(q => `
+              <div class="p-4 rounded-2xl border theme-surface space-y-2">
+                <div class="flex justify-between text-xs font-bold"><span class="theme-primary-text">${q.level} • ${q.cat}</span><span class="theme-secondary-text">${q.tag}</span></div>
+                <div class="font-semibold text-sm">${q.prompt}</div>
+                <div class="text-xs font-bold theme-tertiary-text">Answer: ${q.options[q.ans]}</div>
+                <p class="font-arabic text-sm">${q.ar}</p>
+                <div class="p-2.5 rounded-xl border theme-secondary-badge font-arabic text-xs">💡 ${q.tip}</div>
+                <button onclick="markMastered('${q.id}')" class="w-full py-2.5 rounded-xl border theme-elevated text-xs font-bold theme-tertiary-text">Mark as Mastered</button>
+              </div>`).join('') : `<div class="p-8 rounded-3xl border theme-surface text-center space-y-2"><div class="text-3xl">✨</div><div class="font-bold">Your Review Vault is Clear!</div></div>`}
+          </div>`;
+        return;
+      }
+
+      if (ui.tab === 'ranks') {
+        root.innerHTML = `
+          <div class="space-y-4 animate-pop">
+            <div class="p-5 rounded-3xl border theme-surface flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold theme-secondary-text">THE DESERT FORCE</div>
+                <h2 class="text-xl font-bold">${rank.title}</h2>
+                <div class="font-arabic text-sm theme-primary-text">${rank.ar} • ${state.xp} XP</div>
+              </div>
+              <button onclick="toggleThemeModal(true)" class="px-3.5 py-2 rounded-xl theme-primary-btn text-xs font-bold">🎨 10 Themes</button>
+            </div>
+            <div class="space-y-2.5">
+              ${RANKS.map(r => {
+                const unlocked = state.xp >= r.minXp;
+                return `<div class="p-4 rounded-2xl border theme-surface space-y-1" style="opacity:${unlocked ? 1 : 0.6}">
+                  <div class="flex justify-between items-center"><span class="font-bold">${unlocked ? '✅' : '🔒'} ${r.title}</span><span class="text-xs font-bold theme-primary-text">${r.minXp} XP</span></div>
+                  <div class="font-arabic text-xs theme-secondary-text">${r.ar}</div>
+                  <p class="font-arabic text-xs opacity-85">${r.motto}</p>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+        return;
+      }
+
+      const activeTheme = THEMES.find(t => t.id === state.theme) || THEMES[0];
+      const launchCount = Math.min(10, missionPool().length);
+      root.innerHTML = `
+        <div class="space-y-4 animate-pop">
+          <div class="p-5 rounded-3xl border theme-surface space-y-3" style="background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 14%, var(--surface)), var(--surface));">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="px-3 py-1 rounded-full border theme-secondary-badge text-xs font-bold">🛡️ ${rank.title}</span>
+              <div class="flex gap-2">
+                <button onclick="toggleVipModal(true)" class="px-3 py-1 rounded-full border text-xs font-bold ${state.vip ? 'theme-tertiary-text border-current' : 'theme-secondary-badge'}">${state.vip ? '👑 100% VIP' : '🔑 50% FREE'}</button>
+                <span class="px-3 py-1 rounded-full border theme-elevated text-xs font-bold theme-primary-text">⚡ ${state.xp} XP</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs font-bold tracking-widest theme-primary-text">MARVEL IN ENGLISH</div>
+              <h1 class="text-3xl font-extrabold">The Ultimate Arena</h1>
+              <p class="text-xs opacity-80">160 Idioms, Proverbs, Phrasal Verbs &amp; Cinematic Slang</p>
+            </div>
+          </div>
+
+          <button onclick="toggleVipModal(true)" class="w-full p-4 rounded-2xl border text-left flex items-center justify-between gap-3 ${state.vip ? 'theme-surface' : 'theme-secondary-badge'}">
+            <div>
+              <div class="text-sm font-bold">${state.vip ? `Full Arena Unlocked (${openCount}/${totalCount})` : `Free 50% Edition (${openCount}/${totalCount} Active)`}</div>
+              <div class="text-xs opacity-80">${state.vip ? 'All idioms, proverbs, phrasal verbs & slang unlocked' : 'Activate remaining 50% via code or WhatsApp B2B (+201126542477)'}</div>
+            </div>
+            ${state.vip ? '' : '<span class="px-3 py-1.5 rounded-xl theme-primary-btn text-xs font-bold">Activate</span>'}
+          </button>
+
+          <div class="p-3.5 rounded-2xl border theme-surface flex items-center justify-between">
+            <div><div class="text-xs opacity-75">Active Theme</div><div class="text-sm font-bold">${activeTheme.name} <span class="font-arabic text-xs theme-secondary-text">(${activeTheme.ar})</span></div></div>
+            <button onclick="toggleThemeModal(true)" class="px-3.5 py-2 rounded-xl theme-primary-btn text-xs font-bold">🎨 10 Themes</button>
+          </div>
+
+          <div class="space-y-2.5">
+            <h2 class="text-lg font-bold">Choose CEFR Learning Track</h2>
+            ${LEVELS.map(l => {
+              const selected = ui.selectedLevel === l.id;
+              const openInLvl = accessibleQuestions().filter(q => q.level === l.id).length;
+              const totInLvl = QUESTIONS.filter(q => q.level === l.id).length;
+              return `
+                <button onclick="selectLevel('${l.id}')" class="w-full p-4 rounded-2xl border text-left flex items-center justify-between gap-3 transition"
+                  style="background:${selected ? 'var(--elevated)' : 'var(--surface)'}; border-color:${selected ? 'var(--primary)' : 'var(--border)'}; border-width:${selected ? '2px' : '1px'};">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold theme-elevated theme-primary-text">${l.short} • ${l.cefr}</span>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border theme-secondary-badge">${openInLvl}/${totInLvl} Open</span>
+                    </div>
+                    <div class="font-bold text-base">${l.title}</div>
+                    <div class="text-xs opacity-75">${l.desc}</div>
+                  </div>
+                  <div class="text-right"><div class="text-sm font-bold theme-primary-text">${state.high[l.id] || 0} XP</div><div class="text-[10px] opacity-60">Best</div></div>
+                </button>`;
+            }).join('')}
+          </div>
+
+          <div class="flex gap-1.5 overflow-x-auto pb-1">
+            ${CATEGORIES.map(c => `<button onclick="selectCat('${c}')" class="px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${ui.selectedCat === c ? 'theme-primary-btn border-transparent' : 'theme-elevated'}">${c}</button>`).join('')}
+          </div>
+
+          <button onclick="startMission()" class="w-full py-4 rounded-2xl theme-primary-btn font-extrabold text-base shadow-lg">
+            ▶ Launch ${LEVELS.find(l => l.id === ui.selectedLevel).short} Mission (${launchCount} Qs)
+          </button>
+        </div>`;
+    }
+
+    applyTheme(state.theme);
+    render();
+  </script>
+</body>
+</html>
