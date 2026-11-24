@@ -30,14 +30,15 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Ensure google-services.json exists with matching package name
+      - name: Prepare SDK properties and google-services.json
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
+          printf 'sdk.dir=/usr/local/lib/android/sdk\n' > local.properties
           mkdir -p app
           if [ -n "$GOOGLE_SERVICES_JSON" ]; then
             printf '%s\n' "$GOOGLE_SERVICES_JSON" > app/google-services.json
-          else
+          elif [ ! -f app/google-services.json ]; then
             PKG_NAME="com.aistudio.marvelenglish.kzxqpm"
             if [ -f app/build.gradle.kts ]; then
               DETECTED_PKG=$(grep -oE 'applicationId\s*=\s*"[^"]+"' app/build.gradle.kts | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
