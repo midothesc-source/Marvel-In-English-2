@@ -30,15 +30,23 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Ensure google-services.json exists
+      - name: Ensure google-services.json exists with matching package name
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           mkdir -p app
           if [ -n "$GOOGLE_SERVICES_JSON" ]; then
             printf '%s\n' "$GOOGLE_SERVICES_JSON" > app/google-services.json
-          elif [ ! -f app/google-services.json ]; then
-            cat <<'EOF' > app/google-services.json
+          else
+            PKG_NAME="com.aistudio.marvelenglish.kzxqpm"
+            if [ -f app/build.gradle.kts ]; then
+              DETECTED_PKG=$(grep -oE 'applicationId\s*=\s*"[^"]+"' app/build.gradle.kts | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
+              if [ -n "$DETECTED_PKG" ]; then
+                PKG_NAME="$DETECTED_PKG"
+              fi
+            fi
+
+            cat <<EOF > app/google-services.json
           {
             "project_info": {
               "project_number": "000000000000",
@@ -50,7 +58,7 @@ jobs:
                 "client_info": {
                   "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
                   "android_client_info": {
-                    "package_name": "com.marvelinenglish.app"
+                    "package_name": "${PKG_NAME}"
                   }
                 },
                 "oauth_client": [],
@@ -79,5 +87,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Marvel-In-English-APK
-          path: app/build/outputs/apk/**/*.apk
+          path: "**/build/outputs/apk/**/*.apk"
           if-no-files-found: ignore
